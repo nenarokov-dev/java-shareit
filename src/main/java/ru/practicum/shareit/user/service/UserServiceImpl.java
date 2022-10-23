@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.EmailException;
+import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.user.dao.UserStorage;
 import ru.practicum.shareit.user.model.User;
 
@@ -47,7 +48,7 @@ public class UserServiceImpl implements UserService {
         } catch (NullPointerException e) {
             String message = "Пользователь с id=" + userId + " не найден.";
             log.warn(message);
-            throw new NullPointerException(message);
+            throw new NotFoundException(message);
         }
     }
 
@@ -74,7 +75,7 @@ public class UserServiceImpl implements UserService {
         } catch (NullPointerException e) {
             String message = "Пользователь с id=" + userForUpdate.getId() + " не найден.";
             log.warn(message);
-            throw new NullPointerException(message);
+            throw new NotFoundException(message);
         }
     }
 

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.AuthorizationException;
 import ru.practicum.shareit.exceptions.HeaderException;
+import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.item.dao.ItemStorage;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.dao.UserStorage;
@@ -60,7 +61,7 @@ public class ItemServiceImpl implements ItemService {
         } catch (NullPointerException e) {
             String message = "Предмет с id=" + itemId + " не найден.";
             log.warn(message);
-            throw new NullPointerException(message);
+            throw new NotFoundException(message);
         }
     }
 
@@ -70,7 +71,7 @@ public class ItemServiceImpl implements ItemService {
         if (!itemStorage.getUserItemsId().containsKey(owner)) {
             String message = "Пользователь с id=" + owner + " не найден.";
             log.warn(message);
-            throw new NullPointerException(message);
+            throw new NotFoundException(message);
         }
         try {
             Item itemForUpdate = itemStorage.getItemStorage().get(itemId);
@@ -97,7 +98,7 @@ public class ItemServiceImpl implements ItemService {
         } catch (NullPointerException e) {
             String message = "Предмет с id=" + itemId + " не найден.";
             log.warn(message);
-            throw new NullPointerException(message);
+            throw new NotFoundException(message);
         }
     }
 
@@ -141,7 +142,7 @@ public class ItemServiceImpl implements ItemService {
         } else if (!userStorage.getUserStorage().containsKey(owner)) {
             String message = "Пользователь с id=" + owner + " не найден.";
             log.warn(message);
-            throw new NullPointerException(message);
+            throw new NotFoundException(message);
         }
     }
 }
