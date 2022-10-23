@@ -44,7 +44,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handle(final NullPointerException e) {
+    public ErrorResponse handle(final NotFoundException e) {
         return new ErrorResponse(
                 "Некорректный запрос:", e.getMessage()
         );
