@@ -18,12 +18,12 @@ public class BookingMapper {
                 .id(booking.getId())
                 .start(booking.getStart())
                 .end(booking.getEnd())
-                .item(new BookingDtoOutput.Item(booking.getItem().getId()
-                        , booking.getItem().getName()
-                        , booking.getItem().getDescription()
-                        , booking.getItem().getAvailable()))
-                .booker(new BookingDtoOutput.User(booking.getBooker().getId()
-                        , booking.getBooker().getName()))
+                .item(new BookingDtoOutput.Item(booking.getItem().getId(),
+                        booking.getItem().getName(),
+                        booking.getItem().getDescription(),
+                        booking.getItem().getAvailable()))
+                .booker(new BookingDtoOutput.User(booking.getBooker().getId(),
+                        booking.getBooker().getName()))
                 .status(booking.getStatus())
                 .build();
     }
