@@ -52,12 +52,6 @@ public class BookingServiceImpl {
             log.warn(message);
             throw new BookingException(message);
         }
-        if (bookingRepository.findInBookingNowByItemId(bookingDto.getItemId()).stream()
-                .anyMatch(e -> e.getStart().isBefore(LocalDateTime.now()) & e.getEnd().isAfter(LocalDateTime.now()))) {
-            String message = "Предмет с id=" + booking.getItem().getId() + " уже находится в аренде. Попробуйте позднее.";
-            log.warn(message);
-            throw new BookingException(message);
-        }
         log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
                 + ") был успешно добавлен!");
         return bookingMapper.toBookingDto(bookingRepository.save(booking));
@@ -143,7 +137,7 @@ public class BookingServiceImpl {
                     .map(bookingMapper::toBookingDto).collect(Collectors.toList());
         } else if ("FUTURE".equals(state)) {
             return bookings.stream()
-                    .filter(e -> e.getStart().isAfter(LocalDateTime.now()))
+                    .filter(e -> e.getEnd().isAfter(LocalDateTime.now()))
                     .map(bookingMapper::toBookingDto).collect(Collectors.toList());
         } else if ("WAITING".equals(state)) {
             return bookings.stream()
