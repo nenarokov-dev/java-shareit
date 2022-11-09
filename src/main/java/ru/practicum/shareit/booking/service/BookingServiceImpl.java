@@ -129,7 +129,8 @@ public class BookingServiceImpl {
                     .map(bookingMapper::toBookingDto).collect(Collectors.toList());
         } else if ("CURRENT".equals(state)) {
             return bookings.stream()
-                    .filter(e -> e.getStart().isBefore(LocalDateTime.now()) & e.getEnd().isAfter(LocalDateTime.now()))
+                    .filter(e -> (e.getStart().isBefore(LocalDateTime.now())||e.getStart().equals(LocalDateTime.now()))
+                            & e.getEnd().isAfter(LocalDateTime.now()))
                     .map(bookingMapper::toBookingDto).collect(Collectors.toList());
         } else if ("PAST".equals(state)) {
             return bookings.stream()
