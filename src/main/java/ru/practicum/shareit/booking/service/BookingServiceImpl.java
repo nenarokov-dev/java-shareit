@@ -163,7 +163,7 @@ public class BookingServiceImpl {
         }
     }
 
-    private Stream<Booking> filterByCurrentTime(List<Booking> bookings){
+    private Stream<Booking> filterByCurrentTime(List<Booking> bookings) {
         return bookings.stream()
                 .filter(e -> (e.getStart().isBefore(LocalDateTime.now())))
                 .filter(e -> e.getEnd().isAfter(LocalDateTime.now()));
