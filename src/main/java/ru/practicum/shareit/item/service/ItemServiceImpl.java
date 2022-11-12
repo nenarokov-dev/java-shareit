@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exceptions.AuthorizationException;
 import ru.practicum.shareit.exceptions.BookingException;
@@ -47,14 +48,14 @@ public class ItemServiceImpl {
     public ItemDto get(Long itemId, Long userId) {
         isUserExistsCheck(userId);
         isItemExistsCheck(itemId);
-        ItemDto item = itemDtoCreator(itemRepository.getById(itemId), userId);
+        ItemDto item = itemDtoCreator(itemRepository.findById(itemId).get(), userId);
         log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно получен(-а).");
         return item;
     }
 
     public List<ItemDto> getAll(Long userId) {
         isUserExistsCheck(userId);
-        List<ItemDto> items = itemRepository.getByOwner(userId).stream()
+        List<ItemDto> items = itemRepository.findAllByOwner_Id(userId).stream()
                 .sorted(Comparator.comparing(Item::getId))
                 .map(i -> itemDtoCreator(i, userId))
                 .collect(Collectors.toList());
@@ -108,7 +109,8 @@ public class ItemServiceImpl {
             log.warn(message);
             throw new BookingException(message);
         }
-        if (bookingRepository.findAllBookingsByItemIdAndUserId(itemId, userId).stream()
+        if (bookingRepository.findBookingsByItem_IdAndBooker_IdAndStatusOrderByStart(itemId, userId, BookingStatus.APPROVED)
+                .stream()
                 .noneMatch(i -> i.getStart().isBefore(LocalDateTime.now()))) {
             String message = "Пользователь id=" + userId + " ещё не брал предмет id=" + itemId + " в аренду и не может " +
                     "оставлять комментарии к нему.";
@@ -125,7 +127,9 @@ public class ItemServiceImpl {
     }
 
     private ItemDto itemDtoCreator(Item item, Long userId) {
-        List<Booking> itemApprovedBookings = bookingRepository.findInBookingNowByItemId(item.getId()).stream()
+        List<Booking> itemApprovedBookings = bookingRepository
+                .findBookingsByItem_IdAndStatusOrderByStart(item.getId(),BookingStatus.APPROVED)
+                .stream()
                 .filter(i -> !i.getBooker().getId().equals(userId))
                 .collect(Collectors.toList());
         List<Booking> lastBookings = itemApprovedBookings.stream()
@@ -145,7 +149,7 @@ public class ItemServiceImpl {
         } else {
             bookings.add(null);
         }
-        List<CommentDto> comments = commentRepository.getAllByItemId(item.getId()).stream()
+        List<CommentDto> comments = commentRepository.findAllByItem_Id(item.getId()).stream()
                 .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
         ItemDto itemDto = ItemMapper.toItemDto(item, bookings);

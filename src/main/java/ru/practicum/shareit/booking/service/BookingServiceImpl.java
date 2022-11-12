@@ -18,6 +18,7 @@ import ru.practicum.shareit.user.dao.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -36,7 +37,7 @@ public class BookingServiceImpl {
             log.warn(message);
             throw new BookingException(message);
         }
-        if (itemRepository.getById(bookingDto.getItemId()) == null) {
+        if (itemRepository.findById(bookingDto.getItemId()).isEmpty()) {
             String message = "Предмет с id=" + bookingDto.getItemId() + " не найден.";
             log.warn(message);
             throw new NotFoundException(message);
@@ -115,12 +116,12 @@ public class BookingServiceImpl {
 
     public List<BookingDto> getAllByBooker(Long userId, String state) {
         isUserExistsCheck(userId);
-        return sortByState(bookingRepository.findAllByBookerSortByStartDate(userId), state);
+        return sortByState(bookingRepository.findBookingsByBooker_IdOrderByStartDesc(userId), state);
     }
 
     public List<BookingDto> getAllByOwner(Long ownerId, String state) {
         isUserExistsCheck(ownerId);
-        return sortByState(bookingRepository.findAllByOwnerSortByStartDate(ownerId), state);
+        return sortByState(bookingRepository.findBookingsByItem_Owner_IdOrderByStartDesc(ownerId), state);
     }
 
     private List<BookingDto> sortByState(List<Booking> bookings, String state) {
@@ -128,10 +129,9 @@ public class BookingServiceImpl {
             return bookings.stream()
                     .map(bookingMapper::toBookingDto).collect(Collectors.toList());
         } else if ("CURRENT".equals(state)) {
-            return bookings.stream()
-                    .filter(e -> (e.getStart().isBefore(LocalDateTime.now())))
-                    .filter(e -> e.getEnd().isAfter(LocalDateTime.now()))
-                    .map(bookingMapper::toBookingDto).collect(Collectors.toList());
+            return filterByCurrentTime(bookings)
+                    .map(bookingMapper::toBookingDto)
+                    .collect(Collectors.toList());
         } else if ("PAST".equals(state)) {
             return bookings.stream()
                     .filter(e -> e.getEnd().isBefore(LocalDateTime.now()))
@@ -161,6 +161,12 @@ public class BookingServiceImpl {
             log.warn(message);
             throw new NotFoundException(message);
         }
+    }
+
+    private Stream<Booking> filterByCurrentTime(List<Booking> bookings){
+        return bookings.stream()
+                .filter(e -> (e.getStart().isBefore(LocalDateTime.now())))
+                .filter(e -> e.getEnd().isAfter(LocalDateTime.now()));
     }
 
 }

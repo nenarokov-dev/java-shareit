@@ -16,16 +16,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             "i.available=true")
     List<Item> search(String text);
 
-    @Query(" select i from Item i " +
-            "where i.owner.id =?1")
-    List<Item> getByOwner(Long ownerId);
-
-    @Query(" select i from Item i " +
-            "where i.id =?1")
-    Item getById(Long itemId);
-
-    @Query(" select i from Item i " +
-            "order by i.id desc ")
-    List<Item> getAll();
+    List<Item> findAllByOwner_Id(Long ownerId);
 
 }
