@@ -5,6 +5,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.practicum.shareit.exceptions.models.ErrorMessage;
 import ru.practicum.shareit.exceptions.models.ErrorResponse;
 import ru.practicum.shareit.exceptions.models.Violation;
 
@@ -72,6 +73,20 @@ public class ErrorHandler {
         return new ErrorResponse(
                 "Некорректный запрос:", e.getMessage()
         );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handle(final BookingException e) {
+        return new ErrorResponse(
+                "Некорректный запрос:", e.getMessage()
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handle(final UnsupportedBookingStateException e) {
+        return new ErrorMessage(e.getMessage());
     }
 }
 

@@ -1,127 +1,98 @@
 package ru.practicum.shareit.item.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exceptions.AuthorizationException;
-import ru.practicum.shareit.exceptions.HeaderException;
+import ru.practicum.shareit.exceptions.BookingException;
 import ru.practicum.shareit.exceptions.NotFoundException;
-import ru.practicum.shareit.item.dao.ItemStorage;
+import ru.practicum.shareit.item.dao.CommentRepository;
+import ru.practicum.shareit.item.dao.ItemRepository;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentMapper;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.dao.UserStorage;
+import ru.practicum.shareit.user.dao.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class ItemServiceImpl implements ItemService {
-    private int counter = 1;
-    private final ItemStorage itemStorage;
-    private final UserStorage userStorage;
+@AllArgsConstructor
+public class ItemServiceImpl {
+    private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
-    @Autowired
-    public ItemServiceImpl(ItemStorage itemStorage, UserStorage userStorage) {
-        this.itemStorage = itemStorage;
-        this.userStorage = userStorage;
-    }
+    private final CommentRepository commentRepository;
 
+    public Item add(Item itemForSave, Long owner) {
 
-    @Override
-    public Item add(Item item, Integer owner) {
-        ownerCheck(owner);
-        item.setOwner(owner);
-        if (item.getId() != null) {
-            if (itemStorage.getItemStorage().containsKey(item.getId())) {
-                item.setId(generateId());
-            }
-        } else {
-            item.setId(generateId());
-        }
-        itemStorage.getItemStorage().put(item.getId(), item);
-        if (itemStorage.getUserItemsId().containsKey(owner)) {
-            itemStorage.getUserItemsId().get(owner).add(item.getId());
-        } else {
-            itemStorage.getUserItemsId().put(owner, new HashSet<>());
-            itemStorage.getUserItemsId().get(owner).add(item.getId());
-        }
+        isUserExistsCheck(owner);
+        itemForSave.setOwner(userRepository.findById(owner).get());
+        Item item = itemRepository.save(itemForSave);
         log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно добавлен(-а).");
         return item;
     }
 
-    @Override
-    public Item get(Integer itemId) {
-        try {
-            Item item = itemStorage.getItemStorage().get(itemId);
-            log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно получен(-а).");
-            return item;
-        } catch (NullPointerException e) {
-            String message = "Предмет с id=" + itemId + " не найден.";
+    public ItemDto get(Long itemId, Long userId) {
+        isUserExistsCheck(userId);
+        isItemExistsCheck(itemId);
+        ItemDto item = itemDtoCreator(itemRepository.findById(itemId).get(), userId);
+        log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно получен(-а).");
+        return item;
+    }
+
+    public List<ItemDto> getAll(Long userId) {
+        isUserExistsCheck(userId);
+        List<ItemDto> items = itemRepository.findAllByOwner_Id(userId).stream()
+                .sorted(Comparator.comparing(Item::getId))
+                .map(i -> itemDtoCreator(i, userId))
+                .collect(Collectors.toList());
+        log.info("Пользователь id=" + userId + " получил список принадлежащих ему предметов.");
+        return items;
+    }
+
+    public Item update(Item itemForUpdate, Long owner, Long itemId) {
+        isUserExistsCheck(owner);
+        isItemExistsCheck(itemId);
+        Item item = itemRepository.getReferenceById(itemId);
+        log.error(item.toString());
+        if (!item.getOwner().getId().equals(owner)) {
+            String message = "Ошибка.Редактировать предмет может только его владелец.";
             log.warn(message);
-            throw new NotFoundException(message);
+            throw new AuthorizationException(message);
         }
-    }
-
-    @Override
-    public Item update(Item item, Integer owner, Integer itemId) {
-        ownerCheck(owner);
-        if (!itemStorage.getUserItemsId().containsKey(owner)) {
-            String message = "Пользователь с id=" + owner + " не найден.";
-            log.warn(message);
-            throw new NotFoundException(message);
+        if (itemForUpdate.getName() != null) {
+            item.setName(itemForUpdate.getName());
+            log.error(item.toString());
         }
-        try {
-            Item itemForUpdate = itemStorage.getItemStorage().get(itemId);
-            if (!itemStorage.getUserItemsId().get(owner).contains(itemId)) {
-                String message = "Ошибка.Редактировать предмет может только его владелец.";
-                log.warn(message);
-                throw new AuthorizationException(message);
-            }
-            if (item.getName() != null) {
-                if (!item.getName().isBlank()) {
-                    itemForUpdate.setName(item.getName());
-                }
-            }
-            if (item.getDescription() != null) {
-                if (!item.getDescription().isEmpty()) {
-                    itemForUpdate.setDescription(item.getDescription());
-                }
-            }
-            if (item.getAvailable() != null) {
-                itemForUpdate.setAvailable(item.getAvailable());
-            }
-            log.info("Предмет '" + itemForUpdate.getName() + "' id=" + itemForUpdate.getId() + " был успешно обновлен.");
-            return itemForUpdate;
-        } catch (NullPointerException e) {
-            String message = "Предмет с id=" + itemId + " не найден.";
-            log.warn(message);
-            throw new NotFoundException(message);
+        if (itemForUpdate.getDescription() != null) {
+            item.setDescription(itemForUpdate.getDescription());
+            log.error(item.toString());
         }
+        if (itemForUpdate.getAvailable() != null) {
+            item.setAvailable(itemForUpdate.getAvailable());
+            log.error(item.toString());
+        }
+        log.info("Предмет '" + itemForUpdate.getName() + "' id=" + itemForUpdate.getId() +
+                " был успешно обновлен.");
+        return itemRepository.save(item);
     }
 
-    @Override
-    public List<Item> getAll() {
-        log.info("Список всех имеющихся в базе предметов был успешно получен.");
-        return new ArrayList<>(itemStorage.getItemStorage().values());
-    }
-
-    @Override
-    public List<Item> getByOwner(Integer ownerId) {
-        List<Item> items = new ArrayList<>(itemStorage.getItemStorage().values());
-        log.info("Список предметов пользователя id=" + ownerId + " был успешно получен.");
-        return items.stream().filter(i -> itemStorage.getUserItemsId().get(ownerId).contains(i.getId())).collect(Collectors.toList());
-    }
-
-    @Override
     public List<Item> searchItems(String text) {
         if (!text.isBlank()) {
-            List<Item> items = new ArrayList<>(itemStorage.getItemStorage().values()).stream()
-                    .filter(i -> i.getDescription().toLowerCase().contains(text.toLowerCase()))
-                    .filter(Item::getAvailable)
-                    .collect(Collectors.toList());
+            List<Item> items = itemRepository.search(text);
             log.info("Получен поисковый запрос '" + text + "'. Список из " + items.size() + " предметов был отправлен .");
             return items;
         } else {
@@ -130,17 +101,75 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private int generateId() {
-        return counter++;
+    public CommentDto addComment(Comment comment, Long userId, Long itemId) {
+        isUserExistsCheck(userId);
+        isItemExistsCheck(itemId);
+        if (itemRepository.getReferenceById(itemId).getOwner().getId().equals(userId)) {
+            String message = "Пользователь не может оставлять комментарии к собственному предмету.";
+            log.warn(message);
+            throw new BookingException(message);
+        }
+        if (bookingRepository.findBookingsByItem_IdAndBooker_IdAndStatusOrderByStart(itemId, userId, BookingStatus.APPROVED)
+                .stream()
+                .noneMatch(i -> i.getStart().isBefore(LocalDateTime.now()))) {
+            String message = "Пользователь id=" + userId + " ещё не брал предмет id=" + itemId + " в аренду и не может " +
+                    "оставлять комментарии к нему.";
+            log.warn(message);
+            throw new BookingException(message);
+        }
+        comment.setAuthor(userRepository.getReferenceById(userId));
+        comment.setItem(itemRepository.getReferenceById(itemId));
+        comment.setCreated(LocalDateTime.now());
+        commentRepository.save(comment);
+        log.info("Получен пустой поисковый запрос. Был отправлен пустой список.");
+        return CommentMapper.toCommentDto(comment);
+
     }
 
-    private void ownerCheck(Integer owner) {
-        if (owner == null) {
-            String message = "Не удалось добавить предмет.Отсутствует заголовок-авторизация.";
+    private ItemDto itemDtoCreator(Item item, Long userId) {
+        List<Booking> itemApprovedBookings = bookingRepository
+                .findBookingsByItem_IdAndStatusOrderByStart(item.getId(),BookingStatus.APPROVED)
+                .stream()
+                .filter(i -> !i.getBooker().getId().equals(userId))
+                .collect(Collectors.toList());
+        List<Booking> lastBookings = itemApprovedBookings.stream()
+                .filter(i -> i.getStart().isBefore(LocalDateTime.now()))
+                .collect(Collectors.toList());
+        List<Booking> nextBookings = itemApprovedBookings.stream()
+                .filter(i -> i.getStart().isAfter(LocalDateTime.now()))
+                .collect(Collectors.toList());
+        List<Booking> bookings = new ArrayList<>();
+        if (!lastBookings.isEmpty()) {
+            bookings.add(lastBookings.get(lastBookings.size() - 1));
+        } else {
+            bookings.add(null);
+        }
+        if (!nextBookings.isEmpty()) {
+            bookings.add(nextBookings.get(0));
+        } else {
+            bookings.add(null);
+        }
+        List<CommentDto> comments = commentRepository.findAllByItem_Id(item.getId()).stream()
+                .map(CommentMapper::toCommentDto)
+                .collect(Collectors.toList());
+        ItemDto itemDto = ItemMapper.toItemDto(item, bookings);
+        if (!comments.isEmpty()) {
+            itemDto.setComments(comments);
+        }
+        return itemDto;
+    }
+
+    private void isUserExistsCheck(Long userId) {
+        if (userRepository.findById(userId).isEmpty()) {
+            String message = "Пользователь с id=" + userId + " не найден.";
             log.warn(message);
-            throw new HeaderException(message);
-        } else if (!userStorage.getUserStorage().containsKey(owner)) {
-            String message = "Пользователь с id=" + owner + " не найден.";
+            throw new NotFoundException(message);
+        }
+    }
+
+    private void isItemExistsCheck(Long itemId) {
+        if (itemRepository.findById(itemId).isEmpty()) {
+            String message = "Предмет с id=" + itemId + " не найден.";
             log.warn(message);
             throw new NotFoundException(message);
         }

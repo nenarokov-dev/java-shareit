@@ -3,6 +3,9 @@ package ru.practicum.shareit.item.controller;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
 
@@ -19,24 +22,31 @@ import java.util.List;
 public class ItemController {
 
     private final ItemServiceImpl itemService;
+    private final String authenticationHeader = "X-Sharer-User-Id";
 
     @PostMapping
-    public Item add(@RequestBody @Valid Item item, @RequestHeader(value = "X-Sharer-User-Id", required = false) Integer userId) {
+    public Item add(@RequestBody @Valid Item item, @RequestHeader(value = authenticationHeader, required = false) Long userId) {
         return itemService.add(item, userId);
     }
 
+    @PostMapping("/{itemId}/comment")
+    public CommentDto add(@RequestBody @Valid Comment comment,
+                          @RequestHeader(value = authenticationHeader, required = false) Long userId,
+                          @PathVariable Long itemId) {
+        return itemService.addComment(comment, userId, itemId);
+    }
+
     @GetMapping("/{itemId}")
-    public Item get(@PathVariable Integer itemId) {
-        return itemService.get(itemId);
+    public ItemDto get(@PathVariable Long itemId,
+                       @RequestHeader(value = authenticationHeader, required = false) Long userId) {
+        return itemService.get(itemId, userId);
     }
 
     @GetMapping()
-    public List<Item> getByOwner(@RequestHeader(value = "X-Sharer-User-Id", required = false) Integer userId) {
-        if (userId != null) {
-            return itemService.getByOwner(userId);
-        } else {
-            return itemService.getAll();
-        }
+    public List<ItemDto> getAll(@RequestHeader(value = authenticationHeader, required = false) Long userId) {
+
+        return itemService.getAll(userId);
+
     }
 
     @GetMapping("/search")
@@ -45,8 +55,8 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public Item update(@RequestBody Item item, @PathVariable Integer itemId,
-                       @RequestHeader(value = "X-Sharer-User-Id", required = false) Integer userId) {
+    public Item update(@RequestBody Item item, @PathVariable Long itemId,
+                       @RequestHeader(value = authenticationHeader, required = false) Long userId) {
         return itemService.update(item, userId, itemId);
     }
 }
