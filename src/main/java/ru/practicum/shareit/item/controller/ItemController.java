@@ -25,7 +25,7 @@ public class ItemController {
     private final String authenticationHeader = "X-Sharer-User-Id";
 
     @PostMapping
-    public Item add(@RequestBody @Valid Item item, @RequestHeader(value = authenticationHeader, required = false) Long userId) {
+    public ItemDto add(@RequestBody @Valid ItemDto item, @RequestHeader(value = authenticationHeader, required = false) Long userId) {
         return itemService.add(item, userId);
     }
 
@@ -43,15 +43,19 @@ public class ItemController {
     }
 
     @GetMapping()
-    public List<ItemDto> getAll(@RequestHeader(value = authenticationHeader, required = false) Long userId) {
+    public List<ItemDto> getAll(@RequestParam(required = false) Integer from,
+                                @RequestParam(required = false) Integer size,
+                                @RequestHeader(value = authenticationHeader, required = false) Long userId) {
 
-        return itemService.getAll(userId);
+        return itemService.getAll(userId,from,size);
 
     }
 
     @GetMapping("/search")
-    public List<Item> getByOwner(@RequestParam String text) {
-        return itemService.searchItems(text);
+    public List<Item> search(@RequestParam(required = false) Integer from,
+                                 @RequestParam(required = false) Integer size,
+                                 @RequestParam String text) {
+        return itemService.searchItems(text,from,size);
     }
 
     @PatchMapping("/{itemId}")

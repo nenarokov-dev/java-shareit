@@ -17,6 +17,9 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.pagination.Pagination;
+import ru.practicum.shareit.request.dao.RequestRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.dao.UserRepository;
 
 import java.time.LocalDateTime;
@@ -33,16 +36,33 @@ public class ItemServiceImpl {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
-
     private final CommentRepository commentRepository;
 
-    public Item add(Item itemForSave, Long owner) {
+    private final RequestRepository requestRepository;
+    private final Pagination<Item> pagination;
 
+    public ItemDto add(ItemDto itemForSave, Long owner) {
         isUserExistsCheck(owner);
-        itemForSave.setOwner(userRepository.findById(owner).get());
-        Item item = itemRepository.save(itemForSave);
-        log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно добавлен(-а).");
-        return item;
+        if (itemForSave.getRequestId()!=null) {
+            isRequestExistsCheck(itemForSave.getRequestId());
+        }
+        Item item;
+        if (itemForSave.getRequestId() != null) {
+            item = itemRepository.save(ItemMapper.fromItemDto(
+                    itemForSave,
+                    userRepository.getReferenceById(owner),
+                    requestRepository.getReferenceById(itemForSave.getRequestId())));
+            log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно добавлен(-а).");
+            return ItemMapper.toItemDto(item,item.getItemRequest());
+        } else {
+            item = itemRepository.save(ItemMapper.fromItemDto(itemForSave,
+                    userRepository.getReferenceById(owner)));
+            log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно добавлен(-а).");
+            return itemDtoCreator(item, owner);
+        }
+
+
+
     }
 
     public ItemDto get(Long itemId, Long userId) {
@@ -53,9 +73,10 @@ public class ItemServiceImpl {
         return item;
     }
 
-    public List<ItemDto> getAll(Long userId) {
+    public List<ItemDto> getAll(Long userId,Integer from,Integer size) {
         isUserExistsCheck(userId);
-        List<ItemDto> items = itemRepository.findAllByOwner_Id(userId).stream()
+        List<ItemDto> items = pagination.setPagination(from,size,itemRepository.findAllByOwner_Id(userId))
+                .stream()
                 .sorted(Comparator.comparing(Item::getId))
                 .map(i -> itemDtoCreator(i, userId))
                 .collect(Collectors.toList());
@@ -90,9 +111,9 @@ public class ItemServiceImpl {
         return itemRepository.save(item);
     }
 
-    public List<Item> searchItems(String text) {
+    public List<Item> searchItems(String text,Integer from,Integer size) {
         if (!text.isBlank()) {
-            List<Item> items = itemRepository.search(text);
+            List<Item> items = pagination.setPagination(from,size,itemRepository.search(text));
             log.info("Получен поисковый запрос '" + text + "'. Список из " + items.size() + " предметов был отправлен .");
             return items;
         } else {
@@ -126,18 +147,20 @@ public class ItemServiceImpl {
 
     }
 
-    private ItemDto itemDtoCreator(Item item, Long userId) {
+    public ItemDto itemDtoCreator(Item item, Long userId) {
         List<Booking> itemApprovedBookings = bookingRepository
-                .findBookingsByItem_IdAndStatusOrderByStart(item.getId(),BookingStatus.APPROVED)
+                .findBookingsByItem_IdAndStatusOrderByStart(item.getId(), BookingStatus.APPROVED)
                 .stream()
                 .filter(i -> !i.getBooker().getId().equals(userId))
                 .collect(Collectors.toList());
         List<Booking> lastBookings = itemApprovedBookings.stream()
                 .filter(i -> i.getStart().isBefore(LocalDateTime.now()))
                 .collect(Collectors.toList());
+        System.out.println(lastBookings);
         List<Booking> nextBookings = itemApprovedBookings.stream()
                 .filter(i -> i.getStart().isAfter(LocalDateTime.now()))
                 .collect(Collectors.toList());
+        System.out.println(nextBookings);
         List<Booking> bookings = new ArrayList<>();
         if (!lastBookings.isEmpty()) {
             bookings.add(lastBookings.get(lastBookings.size() - 1));
@@ -156,6 +179,9 @@ public class ItemServiceImpl {
         if (!comments.isEmpty()) {
             itemDto.setComments(comments);
         }
+        if (item.getItemRequest()!=null) {
+            itemDto.setRequestId(item.getItemRequest().getId());
+        }
         return itemDto;
     }
 
@@ -170,6 +196,14 @@ public class ItemServiceImpl {
     private void isItemExistsCheck(Long itemId) {
         if (itemRepository.findById(itemId).isEmpty()) {
             String message = "Предмет с id=" + itemId + " не найден.";
+            log.warn(message);
+            throw new NotFoundException(message);
+        }
+    }
+
+    private void isRequestExistsCheck(Long requestId) {
+        if (requestRepository.findById(requestId).isEmpty()) {
+            String message = "Некорректный id запроса. Запрос с таким id не существует.";
             log.warn(message);
             throw new NotFoundException(message);
         }

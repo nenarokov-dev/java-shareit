@@ -2,6 +2,8 @@ package ru.practicum.shareit.item.dto;
 
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
 
@@ -50,5 +52,40 @@ public class ItemMapper {
                         .build();
             }
         }
+    }
+
+    /**
+     * itemDto без букингов и с не null полем requestId
+     */
+    public static ItemDto toItemDto(Item item, ItemRequest itemRequest) {
+        return ItemDto.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .requestId(itemRequest.getId())
+                .build();
+
+
+    }
+
+
+    public static Item fromItemDto(ItemDto item, User owner, ItemRequest itemRequest) {
+        return Item.builder()
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .itemRequest(itemRequest)
+                .owner(owner)
+                .build();
+    }
+
+    public static Item fromItemDto(ItemDto item, User owner) {
+        return Item.builder()
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .owner(owner)
+                .build();
     }
 }

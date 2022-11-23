@@ -13,6 +13,7 @@ import ru.practicum.shareit.exceptions.BookingException;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.exceptions.UnsupportedBookingStateException;
 import ru.practicum.shareit.item.dao.ItemRepository;
+import ru.practicum.shareit.pagination.Pagination;
 import ru.practicum.shareit.user.dao.UserRepository;
 
 import java.time.LocalDateTime;
@@ -29,6 +30,8 @@ public class BookingServiceImpl {
     private final ItemRepository itemRepository;
 
     private final BookingMapper bookingMapper;
+
+    private final Pagination<BookingDto> pagination;
 
     public BookingDto add(BookingDtoInput bookingDto, Long bookerId) {
         isUserExistsCheck(bookerId);
@@ -114,14 +117,16 @@ public class BookingServiceImpl {
         }
     }
 
-    public List<BookingDto> getAllByBooker(Long userId, String state) {
+    public List<BookingDto> getAllByBooker(Long userId, String state,Integer from, Integer size) {
         isUserExistsCheck(userId);
-        return sortByState(bookingRepository.findBookingsByBooker_IdOrderByStartDesc(userId), state);
+        return pagination.setPagination(from,size
+                ,sortByState(bookingRepository.findBookingsByBooker_IdOrderByStartDesc(userId), state));
     }
 
-    public List<BookingDto> getAllByOwner(Long ownerId, String state) {
+    public List<BookingDto> getAllByOwner(Long ownerId, String state,Integer from, Integer size) {
         isUserExistsCheck(ownerId);
-        return sortByState(bookingRepository.findBookingsByItem_Owner_IdOrderByStartDesc(ownerId), state);
+        return pagination.setPagination(from,size
+                ,sortByState(bookingRepository.findBookingsByItem_Owner_IdOrderByStartDesc(ownerId), state));
     }
 
     private List<BookingDto> sortByState(List<Booking> bookings, String state) {

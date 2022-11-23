@@ -88,5 +88,13 @@ public class ErrorHandler {
     public ErrorMessage handle(final UnsupportedBookingStateException e) {
         return new ErrorMessage(e.getMessage());
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handle(final RequestParamException e) {
+        return new ErrorResponse(
+                "Некорректный запрос:", e.getMessage()
+        );
+    }
 }
 

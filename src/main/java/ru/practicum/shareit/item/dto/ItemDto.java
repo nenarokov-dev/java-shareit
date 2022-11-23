@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,10 +17,13 @@ import java.util.List;
 public class ItemDto {
 
     private Long id;
+    @NotBlank(message = "Имя пользователя не должно быть пустым.")
     private String name;
+    @NotBlank(message = "Описание предмета не должно быть пустым.")
     private String description;
+    @NotNull(message = "При добавлении предмета необходимо указать статус его доступности.")
     private Boolean available;
-    private Integer request;
+    private Long requestId;
     private ItemDto.Booking lastBooking;
     private ItemDto.Booking nextBooking;
     @Builder.Default

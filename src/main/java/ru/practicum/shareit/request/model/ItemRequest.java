@@ -2,11 +2,14 @@ package ru.practicum.shareit.request.model;
 
 import lombok.*;
 import org.hibernate.Hibernate;
+import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -19,7 +22,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "item_requests", schema = "public")
+@Table(name = "requests", schema = "public")
 public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +35,8 @@ public class ItemRequest {
     private User requestor;
     @Column(name = "created", nullable = false)
     private final LocalDateTime created = LocalDateTime.now();
+    @Transient
+    private final List<ItemDto> items = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {
