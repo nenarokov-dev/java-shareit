@@ -49,7 +49,7 @@ public class ItemServiceImpl {
                     userRepository.getReferenceById(owner),
                     requestRepository.getReferenceById(itemForSave.getRequestId())));
             log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно добавлен(-а).");
-            return ItemMapper.toItemDto(item,item.getItemRequest());
+            return ItemMapper.toItemDto(item, item.getItemRequest());
         } else {
             Item item = itemRepository.save(ItemMapper.fromItemDto(itemForSave,
                     userRepository.getReferenceById(owner)));
@@ -66,9 +66,9 @@ public class ItemServiceImpl {
         return item;
     }
 
-    public List<ItemDto> getAll(Long userId,Integer from,Integer size) {
+    public List<ItemDto> getAll(Long userId, Integer from, Integer size) {
         isUserExistsCheck(userId);
-        List<ItemDto> items = pagination.setPagination(from,size,itemRepository.findAllByOwner_Id(userId))
+        List<ItemDto> items = pagination.setPagination(from, size, itemRepository.findAllByOwner_Id(userId))
                 .stream()
                 .sorted(Comparator.comparing(Item::getId))
                 .map(i -> itemDtoCreator(i, userId))
@@ -101,13 +101,13 @@ public class ItemServiceImpl {
         }
         log.info("Предмет '" + itemForUpdate.getName() + "' id=" + itemForUpdate.getId() +
                 " был успешно обновлен.");
-        return itemDtoCreator(itemRepository.save(item),owner);
+        return itemDtoCreator(itemRepository.save(item), owner);
     }
 
-    public List<ItemDto> searchItems(String text,Integer from,Integer size) {
+    public List<ItemDto> searchItems(String text, Integer from, Integer size) {
         if (!text.isBlank()) {
-            List<ItemDto> items = pagination.setPagination(from,size,itemRepository.search(text)).stream()
-                    .map(e->itemDtoCreator(e, e.getOwner().getId()))
+            List<ItemDto> items = pagination.setPagination(from, size, itemRepository.search(text)).stream()
+                    .map(e -> itemDtoCreator(e, e.getOwner().getId()))
                     .collect(Collectors.toList());
             log.info("Получен поисковый запрос '" + text + "'. Список из " + items.size() + " предметов был отправлен .");
             return items;
@@ -173,7 +173,7 @@ public class ItemServiceImpl {
         if (!comments.isEmpty()) {
             itemDto.setComments(comments);
         }
-        if (item.getItemRequest()!=null) {
+        if (item.getItemRequest() != null) {
             itemDto.setRequestId(item.getItemRequest().getId());
         }
         return itemDto;
