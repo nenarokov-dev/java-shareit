@@ -52,22 +52,6 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handle(final EmailException e) {
-        return new ErrorResponse(
-                "Некорректный запрос:", e.getMessage()
-        );
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handle(final HeaderException e) {
-        return new ErrorResponse(
-                "Некорректный запрос:", e.getMessage()
-        );
-    }
-
-    @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handle(final AuthorizationException e) {
         return new ErrorResponse(
