@@ -14,12 +14,15 @@ import ru.practicum.shareit.exceptions.BookingException;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.exceptions.RequestParamException;
 import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.service.RequestService;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import javax.transaction.Transactional;
@@ -184,6 +187,19 @@ class ItemServiceImplTest {
         CommentDto commentAdded = itemService.addComment(comment, userDto.getId(), item.getId());
         ItemDto itemWithBookingsAndComment = itemService.get(item.getId(), userDto2.getId());
         assertThat(itemWithBookingsAndComment.getComments(), equalTo(List.of(commentAdded)));
+        assertThat(itemWithBookingsAndComment.getLastBooking().getId(), equalTo(bookingLast.getId()));
+        assertThat(itemWithBookingsAndComment.getNextBooking().getId(), equalTo(bookingNext.getId()));
+        assertThat(itemWithBookingsAndComment.getLastBooking().getBookerId(), equalTo(bookingLast.getBooker().getId()));
+        assertThat(itemWithBookingsAndComment.getNextBooking().getBookerId(), equalTo(bookingNext.getBooker().getId()));
+    }
+
+    @Test
+    void commentMapperTest() {
+        CommentDto comment = CommentDto.builder().id(1L).text("Не помогло").build();
+        Comment comment1 = CommentMapper.fromCommentDto(comment, UserMapper.toUser(userDto2),
+                ItemMapper.fromItemDto(itemDto, UserMapper.toUser(userDto2)));
+        assertThat(comment1.getText(), equalTo(comment.getText()));
+        assertThat(comment1.getId(), equalTo(comment.getId()));
     }
 
 }

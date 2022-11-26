@@ -1,7 +1,6 @@
 package ru.practicum.shareit.request;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -9,7 +8,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.request.controller.ItemRequestController;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.RequestMapper;
@@ -17,7 +15,6 @@ import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.service.RequestService;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
-import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -49,21 +46,7 @@ class ItemRequestControllerTest {
             .email("user111@yandex.ru")
             .build();
 
-    UserDto userDtoForHelp = UserDto
-            .builder()
-            .id(2L)
-            .name("user222")
-            .email("user222@yandex.ru")
-            .build();
-
-    ItemDto itemDto = ItemDto.builder()
-            .name("Шпора")
-            .description("Содержит в себе шаблоны юнит- и мок-тестов.")
-            .requestId(1L)
-            .available(true)
-            .build();
-
-    ItemRequest request;
+    ItemRequest request = RequestMapper.fromRequestDto(requestDto, UserMapper.toUser(userDto));
 
     @Autowired
     ObjectMapper mapper;
@@ -71,29 +54,13 @@ class ItemRequestControllerTest {
     @MockBean
     RequestService requestService;
 
-    @MockBean
-    UserServiceImpl userService;
-
-
     @Autowired
     private MockMvc mvc;
 
-    @BeforeEach
-    void setRequestItem() {
-        userService.add(userDto);
-        request = RequestMapper.fromRequestDto(requestDto, UserMapper.toUser(userDto));
-        userService.add(userDtoForHelp);
-    }
-
     @Test
     void addRequest() throws Exception {
-        ItemRequest itemRequest = ItemRequest.builder()
-                .requestor(UserMapper.toUser(userDto))
-                .description(itemDto.getDescription())
-                .id(1L).build();
-
         when(requestService.add(any(), anyLong()))
-                .thenReturn(itemRequest);
+                .thenReturn(request);
 
         mvc.perform(post("/requests")
                         .content(mapper.writeValueAsString(requestDto))
@@ -102,9 +69,9 @@ class ItemRequestControllerTest {
                         .header("X-Sharer-User-Id", userDto.getId())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(itemRequest.getId()), Long.class))
-                .andExpect(jsonPath("$.description", is(itemRequest.getDescription())))
-                .andExpect(jsonPath("$.requestor.id", is(itemRequest.getRequestor().getId()), Long.class));
+                .andExpect(jsonPath("$.id", is(request.getId()), Long.class))
+                .andExpect(jsonPath("$.description", is(request.getDescription())))
+                .andExpect(jsonPath("$.requestor.id", is(request.getRequestor().getId()), Long.class));
     }
 
     @Test

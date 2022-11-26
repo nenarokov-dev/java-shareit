@@ -24,19 +24,20 @@ public class ItemController {
     private final String authenticationHeader = "X-Sharer-User-Id";
 
     @PostMapping
-    public ItemDto add(@RequestBody @Valid ItemDto item, @RequestHeader(value = authenticationHeader, required = false) Long userId) {
+    public ItemDto add(@RequestBody @Valid ItemDto item,
+                       @RequestHeader(value = authenticationHeader, required = false) Long userId) {
         return itemService.add(item, userId);
     }
 
     @PostMapping("/{itemId}/comment")
-    public CommentDto add(@RequestBody @Valid Comment comment,
+    public CommentDto addComment(@RequestBody @Valid Comment comment,
                           @RequestHeader(value = authenticationHeader, required = false) Long userId,
                           @PathVariable Long itemId) {
         return itemService.addComment(comment, userId, itemId);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto get(@PathVariable Long itemId,
+    public ItemDto getById(@PathVariable Long itemId,
                        @RequestHeader(value = authenticationHeader, required = false) Long userId) {
         return itemService.get(itemId, userId);
     }

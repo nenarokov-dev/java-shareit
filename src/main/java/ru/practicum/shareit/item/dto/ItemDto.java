@@ -17,7 +17,7 @@ import java.util.List;
 public class ItemDto {
 
     private Long id;
-    @NotBlank(message = "Имя пользователя не должно быть пустым.")
+    @NotBlank(message = "Название предмета не должно быть пустым.")
     private String name;
     @NotBlank(message = "Описание предмета не должно быть пустым.")
     private String description;
