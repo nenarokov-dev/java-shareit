@@ -73,7 +73,7 @@ class UserControllerTest {
     UserDto userUpdateDto = UserMapper.toUserDto(userUpdate);
 
     @BeforeEach
-    void setUsers(){
+    void setUsers() {
         userService.add(userDto1);
         userService.add(userDto2);
         userService.add(userDto3);

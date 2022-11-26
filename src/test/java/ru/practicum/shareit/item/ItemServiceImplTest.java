@@ -99,32 +99,32 @@ class ItemServiceImplTest {
     void setRequestItem() {
         UserDto user = userService.add(userDto);
         userService.add(userDto2);
-        requestService.add(requestDto,user.getId());
+        requestService.add(requestDto, user.getId());
     }
 
     @Test
     void addTest() {
-        ItemDto item = itemService.add(itemDto,userDto2.getId());
+        ItemDto item = itemService.add(itemDto, userDto2.getId());
         assertThat(item, equalTo(itemDto));
-        ItemDto item2 = itemService.add(itemDtoNoRequest,userDto2.getId());
+        ItemDto item2 = itemService.add(itemDtoNoRequest, userDto2.getId());
         assertThat(item2, equalTo(itemDtoNoRequest));
         assertThrows(NotFoundException.class,
-                () -> itemService.add(itemDtoWrongIdRequest,userDto2.getId()));
+                () -> itemService.add(itemDtoWrongIdRequest, userDto2.getId()));
         assertThrows(NotFoundException.class,
                 () -> itemService.add(itemDto, 4L));
     }
 
     @Test
     void getByIdTest() {
-        ItemDto item = itemService.add(itemDto,userDto2.getId());
-        ItemDto item2 = itemService.get(item.getId(),userDto2.getId());
+        ItemDto item = itemService.add(itemDto, userDto2.getId());
+        ItemDto item2 = itemService.get(item.getId(), userDto2.getId());
         assertThat(item2, equalTo(itemDto));
     }
 
     @Test
     void getAllTest() {
-        ItemDto item = itemService.add(itemDto,userDto2.getId());
-        List<ItemDto> items = itemService.getAll(userDto2.getId(),null,null);
+        ItemDto item = itemService.add(itemDto, userDto2.getId());
+        List<ItemDto> items = itemService.getAll(userDto2.getId(), null, null);
         assertThat(items, equalTo(List.of(item)));
         assertThrows(RequestParamException.class,
                 () -> itemService.getAll(userDto2.getId(), -100, null));
@@ -134,23 +134,23 @@ class ItemServiceImplTest {
 
     @Test
     void updateTest() {
-        ItemDto item = itemService.add(itemDto,userDto2.getId());
-        ItemDto itemUpdated = itemService.update(itemDtoNoRequest,item.getOwnerId(),item.getId());
-        ItemDto itemAfterUpdate = itemService.get(item.getId(),item.getOwnerId());
+        ItemDto item = itemService.add(itemDto, userDto2.getId());
+        ItemDto itemUpdated = itemService.update(itemDtoNoRequest, item.getOwnerId(), item.getId());
+        ItemDto itemAfterUpdate = itemService.get(item.getId(), item.getOwnerId());
         assertThat(itemUpdated, equalTo(itemAfterUpdate));
         assertThrows(AuthorizationException.class,
-                () -> itemService.update(itemDtoNoRequest,userDto.getId(),item.getId()));
+                () -> itemService.update(itemDtoNoRequest, userDto.getId(), item.getId()));
         assertThrows(NotFoundException.class,
-                () -> itemService.update(itemDtoNoRequest,100L,item.getId()));
+                () -> itemService.update(itemDtoNoRequest, 100L, item.getId()));
         assertThrows(NotFoundException.class,
-                () -> itemService.update(itemDtoNoRequest,userDto2.getId(),100L));
+                () -> itemService.update(itemDtoNoRequest, userDto2.getId(), 100L));
     }
 
     @Test
     void searchItemsTest() {
-        ItemDto item = itemService.add(itemDto,userDto2.getId());
-        List<ItemDto> items = itemService.searchItems("тест",null,null);
-        List<ItemDto> itemsEmpty = itemService.searchItems("",null,null);
+        ItemDto item = itemService.add(itemDto, userDto2.getId());
+        List<ItemDto> items = itemService.searchItems("тест", null, null);
+        List<ItemDto> itemsEmpty = itemService.searchItems("", null, null);
         assertThat(items, equalTo(List.of(item)));
         assertThat(itemsEmpty, equalTo(Collections.emptyList()));
     }
@@ -158,7 +158,7 @@ class ItemServiceImplTest {
     @Test
     void addCommentTest() throws InterruptedException {
         LocalDateTime testTime = LocalDateTime.now();
-        ItemDto item = itemService.add(itemDto,userDto2.getId());
+        ItemDto item = itemService.add(itemDto, userDto2.getId());
         BookingDtoInput lastBookingDto = BookingDtoInput.builder()
                 .id(1L)
                 .itemId(item.getId())
@@ -173,16 +173,16 @@ class ItemServiceImplTest {
                 .build();
         Comment comment = Comment.builder().text("Не помогло").build();
         assertThrows(BookingException.class,
-                () -> itemService.addComment(comment,userDto2.getId(),item.getId()));
+                () -> itemService.addComment(comment, userDto2.getId(), item.getId()));
         assertThrows(BookingException.class,
-                () -> itemService.addComment(comment,userDto.getId(),item.getId()));
-        BookingDtoOutput bookingLast = bookingService.add(lastBookingDto,userDto.getId());
-        bookingService.approve(bookingLast.getId(),item.getOwnerId(),true);
+                () -> itemService.addComment(comment, userDto.getId(), item.getId()));
+        BookingDtoOutput bookingLast = bookingService.add(lastBookingDto, userDto.getId());
+        bookingService.approve(bookingLast.getId(), item.getOwnerId(), true);
         Thread.sleep(2000);
-        BookingDtoOutput bookingNext = bookingService.add(nextBookingDto,userDto.getId());
-        bookingService.approve(bookingNext.getId(),item.getOwnerId(),true);
-        CommentDto commentAdded = itemService.addComment(comment,userDto.getId(),item.getId());
-        ItemDto itemWithBookingsAndComment = itemService.get(item.getId(),userDto2.getId());
+        BookingDtoOutput bookingNext = bookingService.add(nextBookingDto, userDto.getId());
+        bookingService.approve(bookingNext.getId(), item.getOwnerId(), true);
+        CommentDto commentAdded = itemService.addComment(comment, userDto.getId(), item.getId());
+        ItemDto itemWithBookingsAndComment = itemService.get(item.getId(), userDto2.getId());
         assertThat(itemWithBookingsAndComment.getComments(), equalTo(List.of(commentAdded)));
     }
 

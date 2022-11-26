@@ -19,7 +19,6 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.pagination.Pagination;
 import ru.practicum.shareit.request.dao.RequestRepository;
-import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.dao.UserRepository;
 
 import java.time.LocalDateTime;

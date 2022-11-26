@@ -13,23 +13,23 @@ import java.util.stream.Collectors;
 public class Pagination<T> {
 
     public List<T> setPagination(Integer from, Integer size, List<T> itemRequests) {
-        if (size!=null&&size<=0){
+        if (size != null && size <= 0) {
             String message = "Размер страницы должен быть больше нуля.";
             log.error(message);
             throw new RequestParamException(message);
         }
-        if (from!=null&&from<0){
+        if (from != null && from < 0) {
             String message = "Индекс первого элемента страницы не может быть меньше нуля.";
             log.error(message);
             throw new RequestParamException(message);
         }
-        if (from==null){
-            if (size!=null) {
+        if (from == null) {
+            if (size != null) {
                 return itemRequests.stream().limit(size).collect(Collectors.toList());
             } else
                 return itemRequests;
         }
-        if (from>itemRequests.size()){
+        if (from > itemRequests.size()) {
             return Collections.emptyList();
         } else
             return itemRequests.stream().skip(from).limit(size).collect(Collectors.toList());

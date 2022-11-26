@@ -2,11 +2,8 @@ package ru.practicum.shareit.request.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.NotFoundException;
-import ru.practicum.shareit.exceptions.RequestParamException;
 import ru.practicum.shareit.item.dao.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
@@ -16,11 +13,9 @@ import ru.practicum.shareit.request.dao.RequestRepository;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.RequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
-
 import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
-import javax.persistence.criteria.CriteriaBuilder;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,7 +36,7 @@ public class RequestService {
     public ItemRequest add(ItemRequestDto itemRequest, Long userId) {
         isUserExistsCheck(userId);
         User user = userRepository.getReferenceById(userId);
-        ItemRequest request = requestStorage.save(RequestMapper.fromRequestDto(itemRequest,user));
+        ItemRequest request = requestStorage.save(RequestMapper.fromRequestDto(itemRequest, user));
         log.info("Запрос на аренду id=" + itemRequest.getId() + " успешно добавлен.");
         return request;
     }
@@ -49,12 +44,12 @@ public class RequestService {
     public List<ItemRequest> getAllByRequestor(Long userId) {
         isUserExistsCheck(userId);
         List<ItemRequest> itemRequests = requestStorage.findAllByRequestor_Id(userId);
-        itemRequests.forEach(e->e.getItems().addAll(getItemDtoByRequest(e.getId())));
+        itemRequests.forEach(e -> e.getItems().addAll(getItemDtoByRequest(e.getId())));
         log.info("Список запросов на аренду, созданных пользователем id=" + userId + " успешно получен.");
         return itemRequests;
     }
 
-    public ItemRequest getByRequestId(Long requestId,Long userId) {
+    public ItemRequest getByRequestId(Long requestId, Long userId) {
         isUserExistsCheck(userId);
         isRequestExistsCheck(requestId);
         ItemRequest itemRequest = requestStorage.findById(requestId).get();
@@ -63,10 +58,10 @@ public class RequestService {
         return itemRequest;
     }
 
-    public List<ItemRequest> getAllYouCanHelp(Long userId,Integer from,Integer size) {
+    public List<ItemRequest> getAllYouCanHelp(Long userId, Integer from, Integer size) {
         List<ItemRequest> itemRequests = requestStorage.findAllWhereRequestor_IdNotEquals(userId);
-        itemRequests.forEach(e->e.getItems().addAll(getItemDtoByRequest(e.getId())));
-        List<ItemRequest> itemRequestsPageable = pagination.setPagination(from,size,itemRequests);
+        itemRequests.forEach(e -> e.getItems().addAll(getItemDtoByRequest(e.getId())));
+        List<ItemRequest> itemRequestsPageable = pagination.setPagination(from, size, itemRequests);
         log.info("Список запросов на аренду, которым можно помочь, успешно получен.");
         return itemRequestsPageable;
     }
@@ -77,13 +72,15 @@ public class RequestService {
         if (!items.isEmpty()) {
             return items
                     .stream()
-                    .map(e->itemService.itemDtoCreator(e,e.getOwner().getId()))
+                    .map(e -> itemService.itemDtoCreator(e, e.getOwner().getId()))
                     .collect(Collectors.toList());
         } else {
             return Collections.emptyList();
         }
     }
+
     private void isUserExistsCheck(Long userId) {
+
         if (userRepository.findById(userId).isEmpty()) {
             String message = "Пользователь с id=" + userId + " не найден.";
             log.warn(message);
@@ -92,6 +89,7 @@ public class RequestService {
     }
 
     private void isRequestExistsCheck(Long requestId) {
+
         if (requestStorage.findById(requestId).isEmpty()) {
             String message = "Запрос на аренду с id=" + requestId + " не найден.";
             log.warn(message);

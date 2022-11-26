@@ -53,7 +53,7 @@ public class UserServiceTest {
     private UserServiceImpl userService;
 
     @BeforeEach
-    void setUsers(){
+    void setUsers() {
         userService.add(userDto1);
         userService.add(userDto2);
         userService.add(userDto3);
@@ -74,13 +74,13 @@ public class UserServiceTest {
                 .name("userUpdated")
                 .email("userUpdated@yandex.ru")
                 .build();
-        userService.update(userUpdate,3L);
+        userService.update(userUpdate, 3L);
         UserDto userAfterUpdateDto = UserDto.builder().id(3L)
                 .name(userUpdate.getName()).email(userUpdate.getEmail()).build();
         List<UserDto> users = userService.getAll();
         assertThat(users.size(), equalTo(3));
         assertThat(users, equalTo(List.of(userDto1, userDto2, userAfterUpdateDto)));
-        assertThrows(NotFoundException.class, () -> userService.update(userUpdate,5L));
+        assertThrows(NotFoundException.class, () -> userService.update(userUpdate, 5L));
     }
 
     @Test

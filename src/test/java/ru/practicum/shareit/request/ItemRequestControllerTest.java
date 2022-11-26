@@ -86,13 +86,13 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void addRequest() throws Exception{
+    void addRequest() throws Exception {
         ItemRequest itemRequest = ItemRequest.builder()
                 .requestor(UserMapper.toUser(userDto))
                 .description(itemDto.getDescription())
                 .id(1L).build();
 
-        when(requestService.add(any(),anyLong()))
+        when(requestService.add(any(), anyLong()))
                 .thenReturn(itemRequest);
 
         mvc.perform(post("/requests")
@@ -108,17 +108,17 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getAllByRequestor() throws Exception{
-        ItemRequest itemRequest1= ItemRequest.builder()
+    void getAllByRequestor() throws Exception {
+        ItemRequest itemRequest1 = ItemRequest.builder()
                 .requestor(UserMapper.toUser(userDto))
                 .description("1")
                 .id(1L).build();
-        ItemRequest itemRequest2= ItemRequest.builder()
+        ItemRequest itemRequest2 = ItemRequest.builder()
                 .requestor(UserMapper.toUser(userDto))
                 .description("2")
                 .id(2L).build();
         when(requestService.getAllByRequestor(anyLong()))
-                .thenReturn(List.of(itemRequest1,itemRequest2));
+                .thenReturn(List.of(itemRequest1, itemRequest2));
 
         mvc.perform(get("/requests")
                         .header("X-Sharer-User-Id", userDto.getId()))
@@ -139,20 +139,20 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getAllYouCanHelpTest() throws Exception{
-        ItemRequest itemRequest1= ItemRequest.builder()
+    void getAllYouCanHelpTest() throws Exception {
+        ItemRequest itemRequest1 = ItemRequest.builder()
                 .requestor(UserMapper.toUser(userDto))
                 .description("1")
                 .id(1L).build();
-        ItemRequest itemRequest2= ItemRequest.builder()
+        ItemRequest itemRequest2 = ItemRequest.builder()
                 .requestor(UserMapper.toUser(userDto))
                 .description("2")
                 .id(2L).build();
-        when(requestService.getAllYouCanHelp(anyLong(),any(),any()))
-                .thenReturn(List.of(itemRequest1,itemRequest2));
+        when(requestService.getAllYouCanHelp(anyLong(), any(), any()))
+                .thenReturn(List.of(itemRequest1, itemRequest2));
 
         mvc.perform(get("/requests/all")
-                        .header("X-Sharer-User-Id",userDto.getId())
+                        .header("X-Sharer-User-Id", userDto.getId())
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -172,12 +172,12 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getByRequestId() throws Exception{
-        when(requestService.getByRequestId(anyLong(),anyLong()))
+    void getByRequestId() throws Exception {
+        when(requestService.getByRequestId(anyLong(), anyLong()))
                 .thenReturn(request);
 
         mvc.perform(get("/requests/1")
-                .header("X-Sharer-User-Id", userDto.getId()))
+                        .header("X-Sharer-User-Id", userDto.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(request.getId()), Long.class))
                 .andExpect(jsonPath("$.description", is(request.getDescription())))

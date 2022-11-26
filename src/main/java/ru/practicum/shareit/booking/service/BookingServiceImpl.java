@@ -120,14 +120,14 @@ public class BookingServiceImpl {
 
     public List<BookingDto> getAllByBooker(Long userId, String state,Integer from, Integer size) {
         isUserExistsCheck(userId);
-        return pagination.setPagination(from,size
-                ,sortByState(bookingRepository.findBookingsByBooker_IdOrderByStartDesc(userId), state));
+        return pagination.setPagination(from,size,
+                sortByState(bookingRepository.findBookingsByBooker_IdOrderByStartDesc(userId), state));
     }
 
     public List<BookingDto> getAllByOwner(Long ownerId, String state,Integer from, Integer size) {
         isUserExistsCheck(ownerId);
-        return pagination.setPagination(from,size
-                ,sortByState(bookingRepository.findBookingsByItem_Owner_IdOrderByStartDesc(ownerId), state));
+        return pagination.setPagination(from,size,
+                sortByState(bookingRepository.findBookingsByItem_Owner_IdOrderByStartDesc(ownerId), state));
     }
 
     private List<BookingDto> sortByState(List<Booking> bookings, String state) {
