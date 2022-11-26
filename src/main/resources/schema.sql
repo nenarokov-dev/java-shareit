@@ -51,7 +51,3 @@ CREATE TABLE IF NOT EXISTS comments
     created   TIMESTAMP WITHOUT TIME ZONE             not null
 );
 
-insert into users (name,email) values
-                                   ('user111','user111@yandex.ru'),
-                                   ('user222','user222@yandex.ru'),
-                                   ('user333','user333@yandex.ru');

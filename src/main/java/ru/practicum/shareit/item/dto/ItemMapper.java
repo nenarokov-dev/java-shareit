@@ -18,6 +18,7 @@ public class ItemMapper {
                         .name(item.getName())
                         .description(item.getDescription())
                         .available(item.getAvailable())
+                        .ownerId(item.getOwner().getId())
                         .lastBooking(new ItemDto.Booking(bookings.get(0).getId(),
                                 bookings.get(0).getBooker().getId()))
                         .build();
@@ -27,6 +28,7 @@ public class ItemMapper {
                         .name(item.getName())
                         .description(item.getDescription())
                         .available(item.getAvailable())
+                        .ownerId(item.getOwner().getId())
                         .build();
             }
         } else {
@@ -36,6 +38,7 @@ public class ItemMapper {
                         .name(item.getName())
                         .description(item.getDescription())
                         .available(item.getAvailable())
+                        .ownerId(item.getOwner().getId())
                         .lastBooking(new ItemDto.Booking(bookings.get(0).getId(),
                                 bookings.get(0).getBooker().getId()))
                         .nextBooking(new ItemDto.Booking(bookings.get(1).getId(),
@@ -47,6 +50,7 @@ public class ItemMapper {
                         .name(item.getName())
                         .description(item.getDescription())
                         .available(item.getAvailable())
+                        .ownerId(item.getOwner().getId())
                         .nextBooking(new ItemDto.Booking(bookings.get(1).getId(),
                                 bookings.get(1).getBooker().getId()))
                         .build();
@@ -63,6 +67,7 @@ public class ItemMapper {
                 .name(item.getName())
                 .description(item.getDescription())
                 .available(item.getAvailable())
+                .ownerId(item.getOwner().getId())
                 .requestId(itemRequest.getId())
                 .build();
 

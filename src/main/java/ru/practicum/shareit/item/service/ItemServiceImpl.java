@@ -43,26 +43,20 @@ public class ItemServiceImpl {
 
     public ItemDto add(ItemDto itemForSave, Long owner) {
         isUserExistsCheck(owner);
-        if (itemForSave.getRequestId()!=null) {
-            isRequestExistsCheck(itemForSave.getRequestId());
-        }
-        Item item;
         if (itemForSave.getRequestId() != null) {
-            item = itemRepository.save(ItemMapper.fromItemDto(
+            isRequestExistsCheck(itemForSave.getRequestId());
+            Item item = itemRepository.save(ItemMapper.fromItemDto(
                     itemForSave,
                     userRepository.getReferenceById(owner),
                     requestRepository.getReferenceById(itemForSave.getRequestId())));
             log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно добавлен(-а).");
             return ItemMapper.toItemDto(item,item.getItemRequest());
         } else {
-            item = itemRepository.save(ItemMapper.fromItemDto(itemForSave,
+            Item item = itemRepository.save(ItemMapper.fromItemDto(itemForSave,
                     userRepository.getReferenceById(owner)));
             log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно добавлен(-а).");
             return itemDtoCreator(item, owner);
         }
-
-
-
     }
 
     public ItemDto get(Long itemId, Long userId) {
@@ -84,7 +78,7 @@ public class ItemServiceImpl {
         return items;
     }
 
-    public Item update(Item itemForUpdate, Long owner, Long itemId) {
+    public ItemDto update(ItemDto itemForUpdate, Long owner, Long itemId) {
         isUserExistsCheck(owner);
         isItemExistsCheck(itemId);
         Item item = itemRepository.getReferenceById(itemId);
@@ -108,12 +102,14 @@ public class ItemServiceImpl {
         }
         log.info("Предмет '" + itemForUpdate.getName() + "' id=" + itemForUpdate.getId() +
                 " был успешно обновлен.");
-        return itemRepository.save(item);
+        return itemDtoCreator(itemRepository.save(item),owner);
     }
 
-    public List<Item> searchItems(String text,Integer from,Integer size) {
+    public List<ItemDto> searchItems(String text,Integer from,Integer size) {
         if (!text.isBlank()) {
-            List<Item> items = pagination.setPagination(from,size,itemRepository.search(text));
+            List<ItemDto> items = pagination.setPagination(from,size,itemRepository.search(text)).stream()
+                    .map(e->itemDtoCreator(e, e.getOwner().getId()))
+                    .collect(Collectors.toList());
             log.info("Получен поисковый запрос '" + text + "'. Список из " + items.size() + " предметов был отправлен .");
             return items;
         } else {
@@ -130,11 +126,12 @@ public class ItemServiceImpl {
             log.warn(message);
             throw new BookingException(message);
         }
-        if (bookingRepository.findBookingsByItem_IdAndBooker_IdAndStatusOrderByStart(itemId, userId, BookingStatus.APPROVED)
+        if (bookingRepository
+                .findBookingsByItem_IdAndBooker_IdAndStatusOrderByStart(itemId, userId, BookingStatus.APPROVED)
                 .stream()
                 .noneMatch(i -> i.getStart().isBefore(LocalDateTime.now()))) {
-            String message = "Пользователь id=" + userId + " ещё не брал предмет id=" + itemId + " в аренду и не может " +
-                    "оставлять комментарии к нему.";
+            String message = "Пользователь id=" + userId + " ещё не брал предмет id=" + itemId +
+                    " в аренду и не может оставлять комментарии к нему.";
             log.warn(message);
             throw new BookingException(message);
         }
@@ -156,11 +153,9 @@ public class ItemServiceImpl {
         List<Booking> lastBookings = itemApprovedBookings.stream()
                 .filter(i -> i.getStart().isBefore(LocalDateTime.now()))
                 .collect(Collectors.toList());
-        System.out.println(lastBookings);
         List<Booking> nextBookings = itemApprovedBookings.stream()
                 .filter(i -> i.getStart().isAfter(LocalDateTime.now()))
                 .collect(Collectors.toList());
-        System.out.println(nextBookings);
         List<Booking> bookings = new ArrayList<>();
         if (!lastBookings.isEmpty()) {
             bookings.add(lastBookings.get(lastBookings.size() - 1));

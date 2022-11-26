@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import ru.practicum.shareit.user.model.User;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -23,6 +24,7 @@ public class ItemDto {
     private String description;
     @NotNull(message = "При добавлении предмета необходимо указать статус его доступности.")
     private Boolean available;
+    private Long ownerId;
     private Long requestId;
     private ItemDto.Booking lastBooking;
     private ItemDto.Booking nextBooking;

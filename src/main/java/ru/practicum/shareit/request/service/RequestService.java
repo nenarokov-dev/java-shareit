@@ -18,6 +18,7 @@ import ru.practicum.shareit.request.dto.RequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 
 import ru.practicum.shareit.user.dao.UserRepository;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import java.util.Collections;
@@ -30,7 +31,6 @@ import java.util.stream.Collectors;
 public class RequestService {
     private final RequestRepository requestStorage;
     private final ItemRepository itemRepository;
-    private final RequestMapper requestMapper;
 
     private final ItemServiceImpl itemService;
 
@@ -40,7 +40,8 @@ public class RequestService {
 
     public ItemRequest add(ItemRequestDto itemRequest, Long userId) {
         isUserExistsCheck(userId);
-        ItemRequest request = requestStorage.save(requestMapper.fromRequestDto(itemRequest,userId));
+        User user = userRepository.getReferenceById(userId);
+        ItemRequest request = requestStorage.save(RequestMapper.fromRequestDto(itemRequest,user));
         log.info("Запрос на аренду id=" + itemRequest.getId() + " успешно добавлен.");
         return request;
     }

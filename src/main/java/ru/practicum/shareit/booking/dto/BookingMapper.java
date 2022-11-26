@@ -13,7 +13,7 @@ public class BookingMapper {
     private ItemRepository itemRepository;
     private UserRepository userRepository;
 
-    public BookingDto toBookingDto(Booking booking) {
+    public BookingDtoOutput toBookingDto(Booking booking) {
         return BookingDtoOutput.builder()
                 .id(booking.getId())
                 .start(booking.getStart())

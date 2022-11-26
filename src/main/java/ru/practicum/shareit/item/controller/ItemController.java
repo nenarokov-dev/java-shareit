@@ -52,14 +52,14 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<Item> search(@RequestParam(required = false) Integer from,
+    public List<ItemDto> search(@RequestParam(required = false) Integer from,
                                  @RequestParam(required = false) Integer size,
                                  @RequestParam String text) {
         return itemService.searchItems(text,from,size);
     }
 
     @PatchMapping("/{itemId}")
-    public Item update(@RequestBody Item item, @PathVariable Long itemId,
+    public ItemDto update(@RequestBody ItemDto item, @PathVariable Long itemId,
                        @RequestHeader(value = authenticationHeader, required = false) Long userId) {
         return itemService.update(item, userId, itemId);
     }

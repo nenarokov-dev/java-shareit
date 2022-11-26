@@ -19,9 +19,9 @@ public class UserServiceImpl {
 
     private UserRepository userStorage;
 
-    public UserDto add(User user) {
-        User savedUser = userStorage.save(user);
-        log.info("Пользователь id=" + user.getId() + " успешно добавлен.");
+    public UserDto add(UserDto userDto) {
+        User savedUser = userStorage.save(UserMapper.toUser(userDto));
+        log.info("Пользователь id=" + savedUser.getId() + " успешно добавлен.");
         return UserMapper.toUserDto(savedUser);
     }
 
@@ -43,7 +43,7 @@ public class UserServiceImpl {
         return users;
     }
 
-    public UserDto update(User userForUpdate,Long userId) {
+    public UserDto update(UserDto userForUpdate,Long userId) {
         userForUpdate.setId(userId);
         if (userStorage.findById(userId).isPresent()) {
             User user = userStorage.getReferenceById(userId);

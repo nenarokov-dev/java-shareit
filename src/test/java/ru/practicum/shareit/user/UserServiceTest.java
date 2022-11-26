@@ -1,12 +1,13 @@
 package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import javax.transaction.Transactional;
@@ -19,27 +20,48 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @Transactional
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class UserServiceTest {
 
-    UserDto userDto1 =
-            UserDto.builder().id(1L).name("user111").build();
-    UserDto userDto2 =
-            UserDto.builder().id(2L).name("user222").build();
-    UserDto userDto3 =
-            UserDto.builder().id(3L).name("user333").build();
+    UserDto userDto1 = UserDto
+            .builder()
+            .id(1L)
+            .name("user111")
+            .email("user111@yandex.ru")
+            .build();
+    UserDto userDto2 = UserDto
+            .builder()
+            .id(2L)
+            .name("user222")
+            .email("user222@yandex.ru")
+            .build();
+    UserDto userDto3 = UserDto
+            .builder()
+            .id(3L)
+            .name("user333")
+            .email("user333@yandex.ru")
+            .build();
 
-    User userAdd =
-            User.builder().id(4L).name("userAdd").email("userAdd@yandex.ru").build();
-    UserDto userDtoCreated =
-            UserDto.builder().id(4L).name("userAdd").build();
+    UserDto userDtoCreated = UserDto
+            .builder()
+            .id(4L)
+            .name("userAdd")
+            .email("userAdd@yandex.ru")
+            .build();
 
-    User user3 = new User(4L, "user333", "user333@yandex.ru");
     @Autowired
     private UserServiceImpl userService;
 
+    @BeforeEach
+    void setUsers(){
+        userService.add(userDto1);
+        userService.add(userDto2);
+        userService.add(userDto3);
+    }
+
     @Test
     void testCreate() {
-        userService.add(userAdd);
+        userService.add(userDtoCreated);
         List<UserDto> users = userService.getAll();
         assertThat(users.size(), equalTo(4));
         assertThat(users, equalTo(List.of(userDto1, userDto2, userDto3, userDtoCreated)));
@@ -47,14 +69,18 @@ public class UserServiceTest {
 
     @Test
     void testUpdate() {
-        User userUpdate =
-                User.builder().name("userUpdated").email("userUpdated@yandex.ru").build();
+        UserDto userUpdate = UserDto
+                .builder()
+                .name("userUpdated")
+                .email("userUpdated@yandex.ru")
+                .build();
         userService.update(userUpdate,3L);
-        UserDto userAfterUpdateDto = UserDto.builder().id(3L).name("userUpdated").build();
+        UserDto userAfterUpdateDto = UserDto.builder().id(3L)
+                .name(userUpdate.getName()).email(userUpdate.getEmail()).build();
         List<UserDto> users = userService.getAll();
         assertThat(users.size(), equalTo(3));
         assertThat(users, equalTo(List.of(userDto1, userDto2, userAfterUpdateDto)));
-        assertThrows(NotFoundException.class, () -> userService.get(5L));
+        assertThrows(NotFoundException.class, () -> userService.update(userUpdate,5L));
     }
 
     @Test
