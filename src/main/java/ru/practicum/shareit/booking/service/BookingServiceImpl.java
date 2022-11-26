@@ -29,9 +29,6 @@ public class BookingServiceImpl {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
-
-    private final BookingMapper bookingMapper;
-
     private final Pagination<BookingDto> pagination;
 
     public BookingDtoOutput add(BookingDtoInput bookingDto, Long bookerId) {
@@ -41,12 +38,10 @@ public class BookingServiceImpl {
             log.warn(message);
             throw new BookingException(message);
         }
-        if (itemRepository.findById(bookingDto.getItemId()).isEmpty()) {
-            String message = "Предмет с id=" + bookingDto.getItemId() + " не найден.";
-            log.warn(message);
-            throw new NotFoundException(message);
-        }
-        Booking booking = bookingMapper.fromBookingDto(bookingDto, bookerId);
+        isItemExistsCheck(bookingDto.getItemId());
+        Booking booking = BookingMapper.fromBookingDto(bookingDto,
+                userRepository.getReferenceById(bookerId),
+                itemRepository.getReferenceById(bookingDto.getItemId()));
         if (booking.getItem().getOwner().getId().equals(bookerId)) {
             String message = "Владелец предмета не может арендовать собственные предметы.";
             log.warn(message);
@@ -59,16 +54,12 @@ public class BookingServiceImpl {
         }
         log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
                 + ") был успешно добавлен!");
-        return bookingMapper.toBookingDto(bookingRepository.save(booking));
+        return BookingMapper.toBookingDto(bookingRepository.save(booking));
     }
 
-    public BookingDto approve(Long bookingId, Long ownerId, Boolean approve) {
+    public BookingDtoOutput approve(Long bookingId, Long ownerId, Boolean approve) {
         isUserExistsCheck(ownerId);
-        if (bookingRepository.findById(bookingId).isEmpty()) {
-            String message = "Запрос с id=" + bookingId + " на аренду предмета не найден.";
-            log.warn(message);
-            throw new NotFoundException(message);
-        }
+        isBookingExistsCheck(bookingId);
         Booking booking = bookingRepository.getReferenceById(bookingId);
         if (!booking.getItem().getOwner().getId().equals(ownerId)) {
             String message = "Подтверждать или отклонять запросы на аренду предметов может только их владелец!";
@@ -89,71 +80,66 @@ public class BookingServiceImpl {
             log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
                     + ") был отклонён владельцем!");
         }
-        return bookingMapper.toBookingDto(bookingRepository.save(booking));
+        return BookingMapper.toBookingDto(bookingRepository.save(booking));
     }
 
-    public BookingDto get(Long bookingId, Long userId) {
+    public BookingDtoOutput get(Long bookingId, Long userId) {
         isUserExistsCheck(userId);
-        if (bookingRepository.findById(bookingId).isEmpty()) {
-            String message = "Запрос с id=" + bookingId + " на аренду предмета не найден.";
-            log.warn(message);
-            throw new NotFoundException(message);
+        isBookingExistsCheck(bookingId);
+        Booking booking = bookingRepository.findById(bookingId).get();
+        if (booking.getItem().getOwner().getId().equals(userId)) {
+            log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
+                    + ") был успешно получен.");
+            return BookingMapper.toBookingDto(booking);
+        } else if (booking.getBooker().getId().equals(userId)) {
+            log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
+                    + ") был успешно получен.");
+            return BookingMapper.toBookingDto(booking);
         } else {
-            Booking booking = bookingRepository.findById(bookingId).get();
-            if (booking.getItem().getOwner().getId().equals(userId)) {
-                log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
-                        + ") был успешно получен.");
-                return bookingMapper.toBookingDto(booking);
-            } else if (booking.getBooker().getId().equals(userId)) {
-                log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
-                        + ") был успешно получен.");
-                return bookingMapper.toBookingDto(booking);
-            } else {
-                String message = "Просматривать запрос на аренду предмета может только автор запроса " +
-                        "или владелец предмета!";
-                log.warn(message);
-                throw new NotFoundException(message);//надоело плодить эксепшены под тесты постмана
-                //тут больше подойдёт ошибка авторизации или что-то в этом духе
-            }
+            String message = "Просматривать запрос на аренду предмета может только автор запроса " +
+                    "или владелец предмета!";
+            log.warn(message);
+            throw new NotFoundException(message);//надоело плодить эксепшены под тесты постмана
+            //тут больше подойдёт ошибка авторизации или что-то в этом духе
         }
     }
 
-    public List<BookingDto> getAllByBooker(Long userId, String state,Integer from, Integer size) {
+    public List<BookingDto> getAllByBooker(Long userId, String state, Integer from, Integer size) {
         isUserExistsCheck(userId);
-        return pagination.setPagination(from,size,
+        return pagination.setPagination(from, size,
                 sortByState(bookingRepository.findBookingsByBooker_IdOrderByStartDesc(userId), state));
     }
 
-    public List<BookingDto> getAllByOwner(Long ownerId, String state,Integer from, Integer size) {
+    public List<BookingDto> getAllByOwner(Long ownerId, String state, Integer from, Integer size) {
         isUserExistsCheck(ownerId);
-        return pagination.setPagination(from,size,
+        return pagination.setPagination(from, size,
                 sortByState(bookingRepository.findBookingsByItem_Owner_IdOrderByStartDesc(ownerId), state));
     }
 
     private List<BookingDto> sortByState(List<Booking> bookings, String state) {
         if ("ALL".equals(state)) {
             return bookings.stream()
-                    .map(bookingMapper::toBookingDto).collect(Collectors.toList());
+                    .map(BookingMapper::toBookingDto).collect(Collectors.toList());
         } else if ("CURRENT".equals(state)) {
             return filterByCurrentTime(bookings)
-                    .map(bookingMapper::toBookingDto)
+                    .map(BookingMapper::toBookingDto)
                     .collect(Collectors.toList());
         } else if ("PAST".equals(state)) {
             return bookings.stream()
                     .filter(e -> e.getEnd().isBefore(LocalDateTime.now()))
-                    .map(bookingMapper::toBookingDto).collect(Collectors.toList());
+                    .map(BookingMapper::toBookingDto).collect(Collectors.toList());
         } else if ("FUTURE".equals(state)) {
             return bookings.stream()
                     .filter(e -> e.getEnd().isAfter(LocalDateTime.now()))
-                    .map(bookingMapper::toBookingDto).collect(Collectors.toList());
+                    .map(BookingMapper::toBookingDto).collect(Collectors.toList());
         } else if ("WAITING".equals(state)) {
             return bookings.stream()
                     .filter(e -> e.getStatus().equals(BookingStatus.WAITING))
-                    .map(bookingMapper::toBookingDto).collect(Collectors.toList());
+                    .map(BookingMapper::toBookingDto).collect(Collectors.toList());
         } else if ("REJECTED".equals(state)) {
             return bookings.stream()
                     .filter(e -> e.getStatus().equals(BookingStatus.REJECTED))
-                    .map(bookingMapper::toBookingDto).collect(Collectors.toList());
+                    .map(BookingMapper::toBookingDto).collect(Collectors.toList());
         } else {
             String message = "Поиск по запросу '" + state + "' не поддерживается.";
             log.warn(message);
@@ -169,10 +155,25 @@ public class BookingServiceImpl {
         }
     }
 
+    private void isItemExistsCheck(Long itemId) {
+        if (itemRepository.findById(itemId).isEmpty()) {
+            String message = "Предмет с id=" + itemId + " не найден.";
+            log.warn(message);
+            throw new NotFoundException(message);
+        }
+    }
+
+    private void isBookingExistsCheck(Long bookingId) {
+        if (bookingRepository.findById(bookingId).isEmpty()) {
+            String message = "Запрос с id=" + bookingId + " на аренду предмета не найден.";
+            log.warn(message);
+            throw new NotFoundException(message);
+        }
+    }
+
     private Stream<Booking> filterByCurrentTime(List<Booking> bookings) {
         return bookings.stream()
                 .filter(e -> (e.getStart().isBefore(LocalDateTime.now())))
                 .filter(e -> e.getEnd().isAfter(LocalDateTime.now()));
     }
-
 }

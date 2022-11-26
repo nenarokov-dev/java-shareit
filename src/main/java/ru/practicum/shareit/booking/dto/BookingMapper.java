@@ -4,16 +4,14 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.item.dao.ItemRepository;
-import ru.practicum.shareit.user.dao.UserRepository;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
 
 @Component
 @AllArgsConstructor
 public class BookingMapper {
-    private ItemRepository itemRepository;
-    private UserRepository userRepository;
 
-    public BookingDtoOutput toBookingDto(Booking booking) {
+    public static BookingDtoOutput toBookingDto(Booking booking) {
         return BookingDtoOutput.builder()
                 .id(booking.getId())
                 .start(booking.getStart())
@@ -28,13 +26,13 @@ public class BookingMapper {
                 .build();
     }
 
-    public Booking fromBookingDto(BookingDtoInput booking, Long booker) {
+    public static Booking fromBookingDto(BookingDtoInput booking, User booker, Item item) {
         return Booking.builder()
                 .id(booking.getId())
                 .start(booking.getStart())
                 .end(booking.getEnd())
-                .booker(userRepository.findById(booker).get())
-                .item(itemRepository.findById(booking.getItemId()).get())
+                .booker(booker)
+                .item(item)
                 .status(BookingStatus.WAITING)
                 .build();
     }
