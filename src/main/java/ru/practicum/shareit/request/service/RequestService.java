@@ -77,7 +77,7 @@ public class RequestService {
         }
     }
 
-    private List<ItemRequest> getRequestsWithItems(List<ItemRequest> itemRequests){
+    private List<ItemRequest> getRequestsWithItems(List<ItemRequest> itemRequests) {
         itemRequests.forEach(e -> e.getItems().addAll(getItemDtoByRequest(e.getId())));
         return itemRequests;
     }
