@@ -11,7 +11,7 @@ import java.util.List;
 @SpringBootTest
 class ErrorHandlerTest {
 
-    ErrorHandler errorHandler = new ErrorHandler();
+    private final ErrorHandler errorHandler = new ErrorHandler();
 
 
     @Test

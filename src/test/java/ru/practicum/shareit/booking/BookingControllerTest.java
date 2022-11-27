@@ -37,29 +37,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class BookingControllerTest {
 
-    ItemDto itemDto = ItemDto.builder()
+    private final String authenticationHeader = "X-Sharer-User-Id";
+
+    private final ItemDto itemDto = ItemDto.builder()
             .id(1L)
             .name("Шпора")
             .description("Содержит в себе шаблоны юнит- и мок-тестов.")
             .available(true)
             .build();
 
-    UserDto userDto = UserDto
+    private final UserDto userDto = UserDto
             .builder()
             .id(1L)
             .name("user111")
             .email("user111@yandex.ru")
             .build();
 
-    LocalDateTime testTime;
+    private LocalDateTime testTime;
 
-    BookingDtoInput bookingDto;
+    private BookingDtoInput bookingDto;
 
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    BookingServiceImpl bookingService;
+    private BookingServiceImpl bookingService;
 
     @Autowired
     private MockMvc mvc;
@@ -87,7 +89,7 @@ class BookingControllerTest {
                         .content(mapper.writeValueAsString(bookingDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Sharer-User-Id", 3L)
+                        .header(authenticationHeader, 3L)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(booking.getId()), Long.class))
@@ -108,7 +110,7 @@ class BookingControllerTest {
                         .content(mapper.writeValueAsString(bookingDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Sharer-User-Id", 3L)
+                        .header(authenticationHeader, 3L)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(booking.getId()), Long.class))
@@ -124,7 +126,7 @@ class BookingControllerTest {
                 .thenReturn(BookingMapper.toBookingDto(booking));
 
         mvc.perform(get("/bookings/1")
-                        .header("X-Sharer-User-Id", 3L))
+                        .header(authenticationHeader, 3L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(booking.getId()), Long.class))
                 .andExpect(jsonPath("$.status", is(booking.getStatus().toString())));
@@ -140,7 +142,7 @@ class BookingControllerTest {
 
         mvc.perform(get("/bookings")
                         .param("state", "ALL")
-                        .header("X-Sharer-User-Id", 3L))
+                        .header(authenticationHeader, 3L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[0].id", is(booking.getId()), Long.class))
                 .andExpect(jsonPath("$.[0].status", is(booking.getStatus().toString())));
@@ -156,7 +158,7 @@ class BookingControllerTest {
 
         mvc.perform(get("/bookings/owner")
                         .param("state", "ALL")
-                        .header("X-Sharer-User-Id", 2L))
+                        .header(authenticationHeader, 2L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[0].id", is(booking.getId()), Long.class))
                 .andExpect(jsonPath("$.[0].status", is(booking.getStatus().toString())));

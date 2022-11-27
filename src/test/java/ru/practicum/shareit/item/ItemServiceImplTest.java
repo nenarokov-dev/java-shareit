@@ -40,28 +40,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class ItemServiceImplTest {
 
-    ItemRequestDto requestDto = ItemRequestDto
+    private final ItemRequestDto requestDto = ItemRequestDto
             .builder()
             .id(1L)
             .description("То что поможет прохождению тестов в проложении ShareItApp")
             .requestorId(1L)
             .build();
 
-    UserDto userDto = UserDto
+    private final UserDto userDto = UserDto
             .builder()
             .id(1L)
             .name("user111")
             .email("user111@yandex.ru")
             .build();
 
-    UserDto userDto2 = UserDto
+    private final UserDto userDto2 = UserDto
             .builder()
             .id(2L)
             .name("user222")
             .email("user222@yandex.ru")
             .build();
 
-    ItemDto itemDto = ItemDto.builder()
+    private final ItemDto itemDto = ItemDto.builder()
             .id(1L)
             .name("Шпора")
             .description("Содержит в себе шаблоны юнит- и мок-тестов.")
@@ -70,7 +70,7 @@ class ItemServiceImplTest {
             .ownerId(userDto2.getId())
             .build();
 
-    ItemDto itemDtoNoRequest = ItemDto.builder()
+    private final ItemDto itemDtoNoRequest = ItemDto.builder()
             .id(2L)
             .name("Шпора2")
             .description("Содержит в себе дополнительные шаблоны юнит- и мок-тестов.")
@@ -79,7 +79,7 @@ class ItemServiceImplTest {
             .requestId(null)
             .build();
 
-    ItemDto itemDtoWrongIdRequest = ItemDto.builder()
+    private final ItemDto itemDtoWrongIdRequest = ItemDto.builder()
             .id(3L)
             .name("Шпора3")
             .description("Содержит в себе дополнительные шаблоны юнит- и мок-тестов.")

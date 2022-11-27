@@ -21,14 +21,14 @@ public class UserServiceImpl {
 
     public UserDto add(UserDto userDto) {
         User savedUser = userStorage.save(UserMapper.toUser(userDto));
-        log.info("Пользователь id=" + savedUser.getId() + " успешно добавлен.");
+        log.info("Пользователь id={} успешно добавлен.", savedUser.getId());
         return UserMapper.toUserDto(savedUser);
     }
 
     public UserDto get(Long userId) {
         if (userStorage.findById(userId).isPresent()) {
             User user = userStorage.findById(userId).get();
-            log.info("Пользователь id=" + userId + " успешно получен.");
+            log.info("Пользователь id={} успешно получен.", userId);
             return UserMapper.toUserDto(user);
         } else {
             String message = "Пользователь с id=" + userId + " не найден.";
@@ -43,7 +43,7 @@ public class UserServiceImpl {
         return users;
     }
 
-    public UserDto update(UserDto userForUpdate,Long userId) {
+    public UserDto update(UserDto userForUpdate, Long userId) {
         userForUpdate.setId(userId);
         if (userStorage.findById(userId).isPresent()) {
             User user = userStorage.getReferenceById(userId);
@@ -53,7 +53,7 @@ public class UserServiceImpl {
             if (userForUpdate.getName() != null) {
                 user.setName(userForUpdate.getName());
             }
-            log.info("Пользователь id=" + userForUpdate.getId() + " успешно обновлен.");
+            log.info("Пользователь id={} успешно обновлен.", userForUpdate.getId());
             User savedUser = userStorage.save(user);
             return UserMapper.toUserDto(savedUser);
         } else {

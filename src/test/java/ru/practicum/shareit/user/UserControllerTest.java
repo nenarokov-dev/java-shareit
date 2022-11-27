@@ -32,45 +32,45 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
 
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    UserServiceImpl userService;
+    private UserServiceImpl userService;
 
     @Autowired
     private MockMvc mvc;
 
-    UserDto userDto1 = UserDto.builder()
+    private final UserDto userDto1 = UserDto.builder()
             .id(1L)
             .name("user111")
             .email("user111@yanex.ru")
             .build();
 
-    UserDto userDto2 = UserDto.builder()
+    private final UserDto userDto2 = UserDto.builder()
             .id(2L)
             .name("user222")
             .email("user222@yanex.ru")
             .build();
 
-    UserDto userDto3 = UserDto.builder()
+    private final UserDto userDto3 = UserDto.builder()
             .id(3L)
             .name("user333")
             .email("user333@yanex.ru")
             .build();
 
-    User user1 = User.builder()
+    private final User user1 = User.builder()
             .id(1L)
             .name("user111")
             .email("user111@yanex.ru")
             .build();
 
-    User userUpdate = User.builder()
+    private final User userUpdate = User.builder()
             .id(1L)
             .name("userUpdate")
             .email("userUpdate@yanex.ru")
             .build();
 
-    UserDto userUpdateDto = UserMapper.toUserDto(userUpdate);
+    private final UserDto userUpdateDto = UserMapper.toUserDto(userUpdate);
 
     @BeforeEach
     void setUsers() {

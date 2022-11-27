@@ -32,13 +32,13 @@ public class BookingServiceImpl {
     private final Pagination<BookingDto> pagination;
 
     public BookingDtoOutput add(BookingDtoInput bookingDto, Long bookerId) {
-        isUserExistsCheck(bookerId);
+        isUserExists(bookerId);
         if (bookingDto.getStart().isAfter(bookingDto.getEnd())) {
             String message = "Начало аренды не может быть после её окончания.";
             log.warn(message);
             throw new BookingException(message);
         }
-        isItemExistsCheck(bookingDto.getItemId());
+        isItemExists(bookingDto.getItemId());
         Booking booking = BookingMapper.fromBookingDto(bookingDto,
                 userRepository.getReferenceById(bookerId),
                 itemRepository.getReferenceById(bookingDto.getItemId()));
@@ -52,14 +52,14 @@ public class BookingServiceImpl {
             log.warn(message);
             throw new BookingException(message);
         }
-        log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
-                + ") был успешно добавлен!");
+        log.info("Запрос на аренду предмета '{}' (id={}) был успешно добавлен!",
+                booking.getItem().getName(), booking.getItem().getId());
         return BookingMapper.toBookingDto(bookingRepository.save(booking));
     }
 
     public BookingDtoOutput approve(Long bookingId, Long ownerId, Boolean approve) {
-        isUserExistsCheck(ownerId);
-        isBookingExistsCheck(bookingId);
+        isUserExists(ownerId);
+        isBookingExists(bookingId);
         Booking booking = bookingRepository.getReferenceById(bookingId);
         if (!booking.getItem().getOwner().getId().equals(ownerId)) {
             String message = "Подтверждать или отклонять запросы на аренду предметов может только их владелец!";
@@ -73,31 +73,31 @@ public class BookingServiceImpl {
         }
         if (approve) {
             booking.setStatus(BookingStatus.APPROVED);
-            log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
-                    + ") был успешно подтверждён владельцем!");
+            log.info("Запрос на аренду предмета '{}' (id={}) был успешно подтверждён владельцем!",
+                    booking.getItem().getName(), booking.getItem().getId());
         } else {
             booking.setStatus(BookingStatus.REJECTED);
-            log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
-                    + ") был отклонён владельцем!");
+            log.info("Запрос на аренду предмета '{}' (id={}) был отклонён владельцем!",
+                    booking.getItem().getName(), booking.getItem().getId());
         }
         return BookingMapper.toBookingDto(bookingRepository.save(booking));
     }
 
     public BookingDtoOutput get(Long bookingId, Long userId) {
-        isUserExistsCheck(userId);
-        isBookingExistsCheck(bookingId);
+        isUserExists(userId);
+        isBookingExists(bookingId);
         Booking booking = bookingRepository.findById(bookingId).get();
         if (booking.getItem().getOwner().getId().equals(userId)) {
-            log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
-                    + ") был успешно получен.");
+            log.info("Запрос на аренду предмета '{}' (id={}) был успешно получен.",
+                    booking.getItem().getName(), booking.getItem().getId());
             return BookingMapper.toBookingDto(booking);
         } else if (booking.getBooker().getId().equals(userId)) {
-            log.info("Запрос на аренду предмета '" + booking.getItem().getName() + "' (id=" + booking.getItem().getId()
-                    + ") был успешно получен.");
+            log.info("Запрос на аренду предмета '{}' (id={}) был успешно получен.",
+                    booking.getItem().getName(), booking.getItem().getId());
             return BookingMapper.toBookingDto(booking);
         } else {
-            String message = "Просматривать запрос на аренду предмета может только автор запроса " +
-                    "или владелец предмета!";
+            String message =
+                    "Просматривать запрос на аренду предмета может только автор запроса или владелец предмета!";
             log.warn(message);
             throw new NotFoundException(message);//надоело плодить эксепшены под тесты постмана
             //тут больше подойдёт ошибка авторизации или что-то в этом духе
@@ -105,13 +105,13 @@ public class BookingServiceImpl {
     }
 
     public List<BookingDto> getAllByBooker(Long userId, String state, Integer from, Integer size) {
-        isUserExistsCheck(userId);
+        isUserExists(userId);
         return pagination.setPagination(from, size,
                 sortByState(bookingRepository.findBookingsByBooker_IdOrderByStartDesc(userId), state));
     }
 
     public List<BookingDto> getAllByOwner(Long ownerId, String state, Integer from, Integer size) {
-        isUserExistsCheck(ownerId);
+        isUserExists(ownerId);
         return pagination.setPagination(from, size,
                 sortByState(bookingRepository.findBookingsByItem_Owner_IdOrderByStartDesc(ownerId), state));
     }
@@ -147,7 +147,7 @@ public class BookingServiceImpl {
         }
     }
 
-    private void isUserExistsCheck(Long userId) {
+    private void isUserExists(Long userId) {
         if (userRepository.findById(userId).isEmpty()) {
             String message = "Пользователь с id=" + userId + " не найден.";
             log.warn(message);
@@ -155,7 +155,7 @@ public class BookingServiceImpl {
         }
     }
 
-    private void isItemExistsCheck(Long itemId) {
+    private void isItemExists(Long itemId) {
         if (itemRepository.findById(itemId).isEmpty()) {
             String message = "Предмет с id=" + itemId + " не найден.";
             log.warn(message);
@@ -163,7 +163,7 @@ public class BookingServiceImpl {
         }
     }
 
-    private void isBookingExistsCheck(Long bookingId) {
+    private void isBookingExists(Long bookingId) {
         if (bookingRepository.findById(bookingId).isEmpty()) {
             String message = "Запрос с id=" + bookingId + " на аренду предмета не найден.";
             log.warn(message);

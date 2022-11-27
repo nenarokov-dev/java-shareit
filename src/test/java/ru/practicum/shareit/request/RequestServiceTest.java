@@ -31,28 +31,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class RequestServiceTest {
 
-    ItemRequestDto requestDto = ItemRequestDto
+    private final ItemRequestDto requestDto = ItemRequestDto
             .builder()
             .id(1L)
             .description("То что поможет прохождению тестов в проложении ShareItApp")
             .requestorId(1L)
             .build();
 
-    UserDto userDto = UserDto
+    private final UserDto userDto = UserDto
             .builder()
             .id(1L)
             .name("user111")
             .email("user111@yandex.ru")
             .build();
 
-    UserDto userDtoForHelp = UserDto
+    private final UserDto userDtoForHelp = UserDto
             .builder()
             .id(2L)
             .name("user222")
             .email("user222@yandex.ru")
             .build();
 
-    ItemDto itemDto = ItemDto.builder()
+    private final ItemDto itemDto = ItemDto.builder()
             .name("Шпора")
             .description("Содержит в себе шаблоны юнит- и мок-тестов.")
             .requestId(1L)

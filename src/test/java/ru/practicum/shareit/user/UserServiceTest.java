@@ -23,26 +23,26 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class UserServiceTest {
 
-    UserDto userDto1 = UserDto
+    private final UserDto userDto1 = UserDto
             .builder()
             .id(1L)
             .name("user111")
             .email("user111@yandex.ru")
             .build();
-    UserDto userDto2 = UserDto
+    private final UserDto userDto2 = UserDto
             .builder()
             .id(2L)
             .name("user222")
             .email("user222@yandex.ru")
             .build();
-    UserDto userDto3 = UserDto
+    private final UserDto userDto3 = UserDto
             .builder()
             .id(3L)
             .name("user333")
             .email("user333@yandex.ru")
             .build();
 
-    UserDto userDtoCreated = UserDto
+    private final UserDto userDtoCreated = UserDto
             .builder()
             .id(4L)
             .name("userAdd")

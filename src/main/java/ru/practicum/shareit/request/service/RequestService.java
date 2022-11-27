@@ -34,33 +34,31 @@ public class RequestService {
     private final Pagination<ItemRequest> pagination;
 
     public ItemRequest add(ItemRequestDto itemRequest, Long userId) {
-        isUserExistsCheck(userId);
+        isUserExists(userId);
         User user = userRepository.getReferenceById(userId);
         ItemRequest request = requestStorage.save(RequestMapper.fromRequestDto(itemRequest, user));
-        log.info("Запрос на аренду id=" + itemRequest.getId() + " успешно добавлен.");
+        log.info("Запрос на аренду id={} успешно добавлен.", itemRequest.getId());
         return request;
     }
 
     public List<ItemRequest> getAllByRequestor(Long userId) {
-        isUserExistsCheck(userId);
-        List<ItemRequest> itemRequests = requestStorage.findAllByRequestor_Id(userId);
-        itemRequests.forEach(e -> e.getItems().addAll(getItemDtoByRequest(e.getId())));
-        log.info("Список запросов на аренду, созданных пользователем id=" + userId + " успешно получен.");
+        isUserExists(userId);
+        List<ItemRequest> itemRequests = getRequestsWithItems(requestStorage.findAllByRequestor_Id(userId));
+        log.info("Список запросов на аренду, созданных пользователем id={} успешно получен.", userId);
         return itemRequests;
     }
 
     public ItemRequest getByRequestId(Long requestId, Long userId) {
-        isUserExistsCheck(userId);
-        isRequestExistsCheck(requestId);
+        isUserExists(userId);
+        isRequestExists(requestId);
         ItemRequest itemRequest = requestStorage.findById(requestId).get();
         itemRequest.getItems().addAll(getItemDtoByRequest(requestId));
-        log.info("Запрос на аренду предмета id=" + requestId + " успешно получен.");
+        log.info("Запрос на аренду предмета id={} успешно получен.", requestId);
         return itemRequest;
     }
 
     public List<ItemRequest> getAllYouCanHelp(Long userId, Integer from, Integer size) {
-        List<ItemRequest> itemRequests = requestStorage.findAllWhereRequestor_IdNotEquals(userId);
-        itemRequests.forEach(e -> e.getItems().addAll(getItemDtoByRequest(e.getId())));
+        List<ItemRequest> itemRequests = getRequestsWithItems(requestStorage.findAllWhereRequestor_IdNotEquals(userId));
         List<ItemRequest> itemRequestsPageable = pagination.setPagination(from, size, itemRequests);
         log.info("Список запросов на аренду, которым можно помочь, успешно получен.");
         return itemRequestsPageable;
@@ -79,7 +77,12 @@ public class RequestService {
         }
     }
 
-    private void isUserExistsCheck(Long userId) {
+    private List<ItemRequest> getRequestsWithItems(List<ItemRequest> itemRequests){
+        itemRequests.forEach(e -> e.getItems().addAll(getItemDtoByRequest(e.getId())));
+        return itemRequests;
+    }
+
+    private void isUserExists(Long userId) {
 
         if (userRepository.findById(userId).isEmpty()) {
             String message = "Пользователь с id=" + userId + " не найден.";
@@ -88,7 +91,7 @@ public class RequestService {
         }
     }
 
-    private void isRequestExistsCheck(Long requestId) {
+    private void isRequestExists(Long requestId) {
 
         if (requestStorage.findById(requestId).isEmpty()) {
             String message = "Запрос на аренду с id=" + requestId + " не найден.";

@@ -31,28 +31,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class ItemControllerTest {
 
-    UserDto userDto = UserDto
+    private final String authenticationHeader = "X-Sharer-User-Id";
+
+    private final UserDto userDto = UserDto
             .builder()
             .id(1L)
             .name("user111")
             .email("user111@yandex.ru")
             .build();
 
-    UserDto userDto2 = UserDto
+    private final UserDto userDto2 = UserDto
             .builder()
             .id(2L)
             .name("user222")
             .email("user222@yandex.ru")
             .build();
 
-    ItemDto itemDto = ItemDto.builder()
+    private final ItemDto itemDto = ItemDto.builder()
             .name("Шпора")
             .description("Содержит в себе шаблоны юнит- и мок-тестов.")
             .available(true)
             .ownerId(userDto2.getId())
             .build();
 
-    ItemDto itemDtoNoRequest = ItemDto.builder()
+    private final ItemDto itemDtoNoRequest = ItemDto.builder()
             .id(2L)
             .name("Шпора2")
             .description("Содержит в себе дополнительные шаблоны юнит- и мок-тестов.")
@@ -62,10 +64,10 @@ class ItemControllerTest {
             .build();
 
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    ItemServiceImpl itemService;
+    private ItemServiceImpl itemService;
 
     @Autowired
     private MockMvc mvc;
@@ -80,7 +82,7 @@ class ItemControllerTest {
                         .content(mapper.writeValueAsString(itemDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Sharer-User-Id", itemDto.getOwnerId())
+                        .header(authenticationHeader, itemDto.getOwnerId())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(itemDto.getId()), Long.class))
@@ -104,7 +106,7 @@ class ItemControllerTest {
                         .content(mapper.writeValueAsString(CommentMapper.toCommentDto(comment)))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Sharer-User-Id", itemDto.getOwnerId())
+                        .header(authenticationHeader, itemDto.getOwnerId())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(comment.getId()), Long.class))
@@ -117,7 +119,7 @@ class ItemControllerTest {
                 .thenReturn(itemDto);
 
         mvc.perform(get("/items/1")
-                        .header("X-Sharer-User-Id", itemDto.getOwnerId()))
+                        .header(authenticationHeader, itemDto.getOwnerId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(itemDto.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(itemDto.getName())))
@@ -130,7 +132,7 @@ class ItemControllerTest {
                 .thenReturn(List.of(itemDto, itemDtoNoRequest));
 
         mvc.perform(get("/items")
-                        .header("X-Sharer-User-Id", itemDto.getOwnerId()))
+                        .header(authenticationHeader, itemDto.getOwnerId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[0].id", is(itemDto.getId()), Long.class))
                 .andExpect(jsonPath("$.[0].name", is(itemDto.getName())))
@@ -146,7 +148,7 @@ class ItemControllerTest {
                 .thenReturn(List.of(itemDto, itemDtoNoRequest));
 
         mvc.perform(get("/items/search")
-                        .header("X-Sharer-User-Id", itemDto.getOwnerId())
+                        .header(authenticationHeader, itemDto.getOwnerId())
                         .param("text", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[0].id", is(itemDto.getId()), Long.class))
@@ -166,7 +168,7 @@ class ItemControllerTest {
                         .content(mapper.writeValueAsString(itemDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Sharer-User-Id", itemDto.getOwnerId())
+                        .header(authenticationHeader, itemDto.getOwnerId())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(itemDto.getId()), Long.class))

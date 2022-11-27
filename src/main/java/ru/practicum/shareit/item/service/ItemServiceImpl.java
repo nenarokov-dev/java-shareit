@@ -41,45 +41,45 @@ public class ItemServiceImpl {
     private final Pagination<Item> pagination;
 
     public ItemDto add(ItemDto itemForSave, Long owner) {
-        isUserExistsCheck(owner);
+        isUserExists(owner);
         if (itemForSave.getRequestId() != null) {
-            isRequestExistsCheck(itemForSave.getRequestId());
+            isRequestExists(itemForSave.getRequestId());
             Item item = itemRepository.save(ItemMapper.fromItemDto(
                     itemForSave,
                     userRepository.getReferenceById(owner),
                     requestRepository.getReferenceById(itemForSave.getRequestId())));
-            log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно добавлен(-а).");
+            log.info("Предмет '{}' id={} был(-а) успешно добавлен(-а).", item.getName(), item.getId());
             return ItemMapper.toItemDto(item, item.getItemRequest());
         } else {
             Item item = itemRepository.save(ItemMapper.fromItemDto(itemForSave,
                     userRepository.getReferenceById(owner)));
-            log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно добавлен(-а).");
+            log.info("Предмет '{}' id={} был(-а) успешно добавлен(-а).", item.getName(), item.getId());
             return itemDtoCreator(item, owner);
         }
     }
 
     public ItemDto get(Long itemId, Long userId) {
-        isUserExistsCheck(userId);
-        isItemExistsCheck(itemId);
+        isUserExists(userId);
+        isItemExists(itemId);
         ItemDto item = itemDtoCreator(itemRepository.findById(itemId).get(), userId);
-        log.info("Предмет '" + item.getName() + "' id=" + item.getId() + " был(-а) успешно получен(-а).");
+        log.info("Предмет '{}' id={} был(-а) успешно получен(-а).", item.getName(), item.getId());
         return item;
     }
 
     public List<ItemDto> getAll(Long userId, Integer from, Integer size) {
-        isUserExistsCheck(userId);
+        isUserExists(userId);
         List<ItemDto> items = pagination.setPagination(from, size, itemRepository.findAllByOwner_Id(userId))
                 .stream()
                 .sorted(Comparator.comparing(Item::getId))
                 .map(i -> itemDtoCreator(i, userId))
                 .collect(Collectors.toList());
-        log.info("Пользователь id=" + userId + " получил список принадлежащих ему предметов.");
+        log.info("Пользователь id={} получил список принадлежащих ему предметов.", userId);
         return items;
     }
 
     public ItemDto update(ItemDto itemForUpdate, Long owner, Long itemId) {
-        isUserExistsCheck(owner);
-        isItemExistsCheck(itemId);
+        isUserExists(owner);
+        isItemExists(itemId);
         Item item = itemRepository.getReferenceById(itemId);
         log.error(item.toString());
         if (!item.getOwner().getId().equals(owner)) {
@@ -99,8 +99,7 @@ public class ItemServiceImpl {
             item.setAvailable(itemForUpdate.getAvailable());
             log.error(item.toString());
         }
-        log.info("Предмет '" + itemForUpdate.getName() + "' id=" + itemForUpdate.getId() +
-                " был успешно обновлен.");
+        log.info("Предмет '{}' id={} был успешно обновлен.", itemForUpdate.getName(), itemForUpdate.getId());
         return itemDtoCreator(itemRepository.save(item), owner);
     }
 
@@ -109,7 +108,7 @@ public class ItemServiceImpl {
             List<ItemDto> items = pagination.setPagination(from, size, itemRepository.search(text)).stream()
                     .map(e -> itemDtoCreator(e, e.getOwner().getId()))
                     .collect(Collectors.toList());
-            log.info("Получен поисковый запрос '" + text + "'. Список из " + items.size() + " предметов был отправлен .");
+            log.info("Получен поисковый запрос '{}'. Список из {} предметов был отправлен .", text, items.size());
             return items;
         } else {
             log.info("Получен пустой поисковый запрос. Был отправлен пустой список.");
@@ -118,8 +117,8 @@ public class ItemServiceImpl {
     }
 
     public CommentDto addComment(Comment comment, Long userId, Long itemId) {
-        isUserExistsCheck(userId);
-        isItemExistsCheck(itemId);
+        isUserExists(userId);
+        isItemExists(itemId);
         if (itemRepository.getReferenceById(itemId).getOwner().getId().equals(userId)) {
             String message = "Пользователь не может оставлять комментарии к собственному предмету.";
             log.warn(message);
@@ -179,7 +178,7 @@ public class ItemServiceImpl {
         return itemDto;
     }
 
-    private void isUserExistsCheck(Long userId) {
+    private void isUserExists(Long userId) {
         if (userRepository.findById(userId).isEmpty()) {
             String message = "Пользователь с id=" + userId + " не найден.";
             log.warn(message);
@@ -187,7 +186,7 @@ public class ItemServiceImpl {
         }
     }
 
-    private void isItemExistsCheck(Long itemId) {
+    private void isItemExists(Long itemId) {
         if (itemRepository.findById(itemId).isEmpty()) {
             String message = "Предмет с id=" + itemId + " не найден.";
             log.warn(message);
@@ -195,7 +194,7 @@ public class ItemServiceImpl {
         }
     }
 
-    private void isRequestExistsCheck(Long requestId) {
+    private void isRequestExists(Long requestId) {
         if (requestRepository.findById(requestId).isEmpty()) {
             String message = "Некорректный id запроса. Запрос с таким id не существует.";
             log.warn(message);
