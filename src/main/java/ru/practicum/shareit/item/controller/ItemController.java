@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Comment;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
 
 import javax.validation.Valid;
@@ -25,37 +24,42 @@ public class ItemController {
     private final String authenticationHeader = "X-Sharer-User-Id";
 
     @PostMapping
-    public Item add(@RequestBody @Valid Item item, @RequestHeader(value = authenticationHeader, required = false) Long userId) {
+    public ItemDto add(@RequestBody @Valid ItemDto item,
+                       @RequestHeader(value = authenticationHeader, required = false) Long userId) {
         return itemService.add(item, userId);
     }
 
     @PostMapping("/{itemId}/comment")
-    public CommentDto add(@RequestBody @Valid Comment comment,
+    public CommentDto addComment(@RequestBody @Valid Comment comment,
                           @RequestHeader(value = authenticationHeader, required = false) Long userId,
                           @PathVariable Long itemId) {
         return itemService.addComment(comment, userId, itemId);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto get(@PathVariable Long itemId,
+    public ItemDto getById(@PathVariable Long itemId,
                        @RequestHeader(value = authenticationHeader, required = false) Long userId) {
         return itemService.get(itemId, userId);
     }
 
     @GetMapping()
-    public List<ItemDto> getAll(@RequestHeader(value = authenticationHeader, required = false) Long userId) {
+    public List<ItemDto> getAll(@RequestParam(required = false) Integer from,
+                                @RequestParam(required = false) Integer size,
+                                @RequestHeader(value = authenticationHeader, required = false) Long userId) {
 
-        return itemService.getAll(userId);
+        return itemService.getAll(userId,from,size);
 
     }
 
     @GetMapping("/search")
-    public List<Item> getByOwner(@RequestParam String text) {
-        return itemService.searchItems(text);
+    public List<ItemDto> search(@RequestParam(required = false) Integer from,
+                                 @RequestParam(required = false) Integer size,
+                                 @RequestParam String text) {
+        return itemService.searchItems(text,from,size);
     }
 
     @PatchMapping("/{itemId}")
-    public Item update(@RequestBody Item item, @PathVariable Long itemId,
+    public ItemDto update(@RequestBody ItemDto item, @PathVariable Long itemId,
                        @RequestHeader(value = authenticationHeader, required = false) Long userId) {
         return itemService.update(item, userId, itemId);
     }
