@@ -3,7 +3,6 @@ package ru.practicum.shareit.booking.dto;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.validation.constraints.Future;
 import java.time.LocalDateTime;
 
 @Data
